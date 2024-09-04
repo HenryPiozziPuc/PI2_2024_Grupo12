@@ -1,0 +1,31 @@
+{
+    "name": "pi2_2024",
+    "version": "1.0.0",
+    "description": "projeto integrador segundo semestre",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/HenryPiozziPuc/PI2_2024.git"
+    },
+    "keywords": [
+        "puc-campinas",
+        "engenharia",
+        "pi",
+        "web",
+        "node",
+        "apostas"
+    ],
+    "author": "Henry Gabriel Piozzi",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/HenryPiozziPuc/PI2_2024/issues"
+    },
+    "homepage": "https://github.com/HenryPiozziPuc/PI2_2024#readme",
+    "dependencies": {
+        "@types/node": "^22.5.3",
+        "typescript": "^5.5.4"
+    }
+}
