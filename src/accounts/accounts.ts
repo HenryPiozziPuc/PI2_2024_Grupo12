@@ -1,60 +1,102 @@
 import {Request, RequestHandler, Response} from "express";
+import OracleDB, { oracleClientVersion } from "oracledb";
 
 /*
     Nampespace que contém tudo sobre "contas de usuários"
 */
 export namespace AccountsHandler {
     
-    /**
-     * Tipo UserAccount
-     */
+    //Tipo UserAccount
     export type UserAccount = {
-        name:string;
-        email:string;
-        password:string;
-        birthdate:string; 
+        CPF: number | undefined,
+        completeName: string,
+        email: string;
+        phoneNumber: number,
+        birthdate: Date,
+        password:string | undefined
     };
 
-    // Array que representa uma coleção de contas. 
-    let accountsDatabase: UserAccount[] = [];
+    async function login(email: string, password: string){
 
-    /**
-     * Salva uma conta no banco de dados. 
-     * @param ua conta de usuário do tipo @type {UserAccount}
-     * @returns @type { number } o código da conta cadastrada como posição no array.
-     */
-    export function saveNewAccount(ua: UserAccount) : number{
-        accountsDatabase.push(ua);
-        return accountsDatabase.length;
+        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
+
+        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
+        let connection = await OracleDB.getConnection({
+            user: "ADMIN",
+            password: "minhasenha",
+            connectString:"dados de conexao servidor oracle"
+        });
+
+        const accounts = await connection.execute(
+            'SELECT * FROM ACCOUNTS WHERE EMAIL = :email AND PASSWORD = :password',
+            [email, password]
+        );
+
+        await connection.close();
+
+        console.dir(accounts.rows);
     }
 
-    /**
-     * Função para tratar a rota HTTP /signUp. 
-     * @param req Requisição http tratada pela classe @type { Request } do express
-     * @param res Resposta http a ser enviada para o cliente @type { Response }
-     */
-    export const createAccountRoute: RequestHandler = (req: Request, res: Response) => {
-        // Passo 1 - Receber os parametros para criar a conta
-        const pName = req.get('name');
+    async function signUp(cpf: number, name:string, email:string, password: string, phone_number: number, birthdate:Date){
+
+        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
+        let connection = await OracleDB.getConnection({
+            user: "ADMIN",
+            password: "minhasenha",
+            connectString:"dados de conexao servidor oracle"
+        });
+
+        const accounts = await connection.execute(
+            'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate)',
+            [cpf, name, email, password, phone_number, birthdate]
+        );
+        
+        await connection.close();
+
+        console.dir(accounts.rows);
+    }
+
+    export const loginHandler: RequestHandler = async (req: Request, res: Response) => {
         const pEmail = req.get('email');
         const pPassword = req.get('password');
-        const pBirthdate = req.get('birthdate');
-        
-        if(pName && pEmail && pPassword && pBirthdate){
-            // prosseguir com o cadastro... 
-            const newAccount: UserAccount = {
-                name: pName,
-                email: pEmail, 
-                password: pPassword,
-                birthdate: pBirthdate
-            }
-            const ID = saveNewAccount(newAccount);
-            res.statusCode = 200; 
-            res.send(`Nova conta adicionada. Código: ${ID}`);
-        }else{
+        if (pEmail && pPassword) {
+            await login(pEmail, pPassword);
+            res.statusCode = 200;
+            res.send("Login efetuado com sucesso.");
+        } else {
             res.statusCode = 400;
             res.send("Parâmetros inválidos ou faltantes.");
         }
-    }
 
+    };
+
+    export const registerHandler: RequestHandler = (req: Request, res: Response) => {
+        const pCPF = Number(req.get('CPF'));
+        const pName = req.get('name');
+        const pEmail = req.get('email');
+        const pPhoneNumber = req.get('phoneNumber');
+        const pBirthdate = req.get('birthdate');
+        const pPassword = req.get('password');
+
+        if (pCPF && pName && pEmail && pPhoneNumber && pBirthdate && pPassword) {
+            const newAccount: UserAccount = {
+                CPF: pCPF,
+                completeName: pName,
+                email: pEmail,
+                phoneNumber: Number(pPhoneNumber),
+                birthdate: new Date(pBirthdate),
+                password: pPassword
+            }
+
+            const ID = signUp(newAccount.CPF, newAccount.completeName, newAccount.email, newAccount.password, newAccount.phoneNumber, newAccount.birthdate);
+            
+            res.statusCode = 200; 
+            res.send(`Nova conta adicionada. Código: ${ID}`);
+
+        } else {
+            res.statusCode = 400;
+            res.send("Parâmetros inválidos ou faltantes.");
+        }
+
+    };
 }
