@@ -1,31 +1,25 @@
 {
-  "name": "pi2_2024",
+  "name": "express-template",
   "version": "1.0.0",
-  "description": "projeto integrador segundo semestre",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node ./build/src/server.js",
+    "dev": "nodemon src/server.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/HenryPiozziPuc/PI2_2024.git"
-  },
-  "keywords": [
-    "puc-campinas",
-    "engenharia",
-    "pi",
-    "web",
-    "node",
-    "apostas"
-  ],
-  "author": "Henry Gabriel Piozzi",
+  "keywords": [],
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/HenryPiozziPuc/PI2_2024/issues"
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "@types/oracledb": "^6.5.1",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
   },
-  "homepage": "https://github.com/HenryPiozziPuc/PI2_2024#readme",
   "dependencies": {
-    "@types/node": "^22.5.3",
-    "typescript": "^5.5.4"
+    "express": "^4.21.0"
   }
 }
