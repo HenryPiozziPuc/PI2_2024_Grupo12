@@ -8,12 +8,12 @@ export namespace AccountsHandler {
     
     //Tipo UserAccount
     export type UserAccount = {
-        CPF: number | undefined,
+        CPF: number, // | Undefined
         completeName: string,
         email: string;
         phoneNumber: number,
         birthdate: Date,
-        password:string | undefined
+        password:string // | Undefined
     };
 
     async function login(email: string, password: string){

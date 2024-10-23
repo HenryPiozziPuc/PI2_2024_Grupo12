@@ -1,10 +1,7 @@
 import express from "express";
 import {Request, Response, Router} from "express";
 import { AccountsHandler } from "./accounts/accounts";
-
-// Criando os imports restantes
 import { FinancialHandler } from "./financial/financial";
-
 import { EventsHandler } from "./events/events";
 import { BetsHandler } from "./bets/bets";
 
@@ -14,23 +11,22 @@ const routes = Router();
 
 // definir as rotas. 
 // a rota tem um verbo/método http (GET, POST, PUT, DELETE)
-routes.get('/', (req: Request, res: Response)=>{
+routes.get('/', (req: Request, res: Response) => {
     res.statusCode = 403;
     res.send('Acesso não permitido.');
 });
 
 //accounts
 routes.post('/login', AccountsHandler.loginHandler);
-
 routes.put('/signUp', AccountsHandler.registerHandler);
 
-//financial
+// Financial
 routes.post('/addFunds', FinancialHandler.AddingFunds);
 
 routes.post('/withdrawFunds', FinancialHandler.);
 
-//events
-routes.put('/addNewEvent', EventsHandler.);
+// Events
+routes.put('/addNewEvent', EventsHandler.addNewEvent);
 
 routes.get('/getEvents', EventsHandler.);
 
@@ -38,7 +34,7 @@ routes.delete('/deleteEvents', EventsHandler.);
 
 routes.post('evaluateNewEvent', EventsHandler.);
 
-//bets
+// Bets
 routes.post('/betOnEvent', BetsHandler.);
 
 routes.post('/finishEvent', BetsHandler.);
