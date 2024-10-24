@@ -46,19 +46,25 @@ export namespace EventsHandler {
         console.dir(accounts.rows);
     }
 
-    async function deleteEventByID(EventId: number){
+    async function deleteEventByID(EventId: number): Promise<number>{
         OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
         let connection;
+        
         try {
-            connection = await OracleDB.getConnection();
+            connection = await OracleDB.getConnection({
+                user: "ADMIN",
+                password: "minhasenha",
+                connectString: "dados de conexao servidor oracle";
+        });
             const result = await connection.execute(
                 `DELETE FROM EVENTS WHERE ID = :id`,
                 {id: EventId},
                 {autoCommit: true}
             );
-            return result.rowsAffected // Faz com que retorne o numero de linhas deletadas
+            
+            return result.rowsAffected || 0; // Faz com que retorne o numero de linhas deletadas
         } catch (error){
-            console.error(error);
+            console.error("Erro ao deletar evento: ", error);
         } finally {
             if(connection){
                 await connection.close();
