@@ -46,7 +46,7 @@ export namespace EventsHandler {
         console.dir(accounts.rows);
     }
 
-    async function deleteEventByID(EventId: number): Promise<number>{
+    async function deleteEventByID(EventId: number): Promise<number> {
         OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
         let connection;
         
@@ -54,7 +54,7 @@ export namespace EventsHandler {
             connection = await OracleDB.getConnection({
                 user: "ADMIN",
                 password: "minhasenha",
-                connectString: "dados de conexao servidor oracle";
+                connectString: "dados de conexao servidor oracle"
         });
             const result = await connection.execute(
                 `DELETE FROM EVENTS WHERE ID = :id`,
@@ -65,6 +65,7 @@ export namespace EventsHandler {
             return result.rowsAffected || 0; // Faz com que retorne o numero de linhas deletadas
         } catch (error){
             console.error("Erro ao deletar evento: ", error);
+            return 0;
         } finally {
             if(connection){
                 await connection.close();
@@ -85,7 +86,7 @@ export namespace EventsHandler {
                     res.status(404).json({ message: `Evento com ID ${eventId} nao encontrado. `});
                 }
             } catch (error) {
-                res.status(500).json({ message: "Erro interno ao deletar evento", error: error.message });
+                res.status(500).json({ message: "Erro interno ao deletar evento", error});
             }
         } else {
             res.status(400).json({ message: "ID inválido." });
