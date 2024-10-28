@@ -11,10 +11,11 @@ export namespace AccountsHandler {
         CPF: number, // | Undefined
         completeName: string,
         email: string;
+        password:string,
         phoneNumber: number,
         birthdate: Date,
-        password:string,
-        tokken: string | undefined
+        tokken: string | undefined,
+        role: number
     };
 
     async function login(email: string, password: string){
@@ -48,8 +49,8 @@ export namespace AccountsHandler {
         });
 
         const accounts = await connection.execute(
-            'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate)',
-            [account.CPF, account.completeName, account.email, account.password, account.phoneNumber, account.birthdate]
+            'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE, TOKKEN, ROLE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate,:token,:role)',
+            [account.CPF, account.completeName, account.email, account.password, account.phoneNumber, account.birthdate, account.tokken, account.role]
         );
 
         await connection.commit();
@@ -86,10 +87,11 @@ export namespace AccountsHandler {
                 CPF: pCPF,
                 completeName: pName,
                 email: pEmail,
+                password: pPassword,
                 phoneNumber: Number(pPhoneNumber),
                 birthdate: new Date(pBirthdate),
-                password: pPassword,
-                tokken: undefined
+                tokken: undefined,
+                role: 0
             }
 
             const ID = signUp(newAccount);
