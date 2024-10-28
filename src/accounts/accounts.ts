@@ -8,12 +8,13 @@ export namespace AccountsHandler {
     
     //Tipo UserAccount
     export type UserAccount = {
-        CPF: number, // | Undefined
+        CPF: number | undefined,
         completeName: string,
         email: string;
         phoneNumber: number,
         birthdate: Date,
-        password:string // | Undefined
+        password:string,
+        tokken: string | undefined
     };
 
     async function login(email: string, password: string){
@@ -29,15 +30,15 @@ export namespace AccountsHandler {
 
         const accounts = await connection.execute(
             'SELECT * FROM ACCOUNTS WHERE EMAIL = :email AND PASSWORD = :password',
-            [email, password]
+            {email, password}
         );
 
         await connection.close();
 
-        console.dir(accounts.rows);
+        return accounts.rows;
     }
 
-    async function signUp(cpf: number, name:string, email:string, password: string, phone_number: number, birthdate:Date){
+    async function signUp(account: UserAccount){
 
         OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
         let connection = await OracleDB.getConnection({
@@ -48,9 +49,10 @@ export namespace AccountsHandler {
 
         const accounts = await connection.execute(
             'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate)',
-            [cpf, name, email, password, phone_number, birthdate]
+            [account.CPF, account.completeName, account.email, account.password, account.phoneNumber, account.birthdate]
         );
-        
+
+        await connection.commit();
         await connection.close();
 
         console.dir(accounts.rows);
@@ -60,7 +62,8 @@ export namespace AccountsHandler {
         const pEmail = req.get('email');
         const pPassword = req.get('password');
         if (pEmail && pPassword) {
-            await login(pEmail, pPassword);
+            const account = await login(pEmail, pPassword);
+            if(account && account.length > 0)
             res.statusCode = 200;
             res.send("Login efetuado com sucesso.");
         } else {
@@ -85,10 +88,11 @@ export namespace AccountsHandler {
                 email: pEmail,
                 phoneNumber: Number(pPhoneNumber),
                 birthdate: new Date(pBirthdate),
-                password: pPassword
+                password: pPassword,
+                tokken: undefined
             }
 
-            const ID = signUp(newAccount.CPF, newAccount.completeName, newAccount.email, newAccount.password, newAccount.phoneNumber, newAccount.birthdate);
+            const ID = signUp(newAccount);
             
             res.statusCode = 200; 
             res.send(`Nova conta adicionada. Código: ${ID}`);
