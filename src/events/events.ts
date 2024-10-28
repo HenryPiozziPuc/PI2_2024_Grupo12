@@ -31,9 +31,9 @@ export namespace EventsHandler {
 
         // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
         let connection = await OracleDB.getConnection({
-            user: "ADMIN",
-            password: "minhasenha",
-            connectString:"dados de conexao servidor oracle"
+            user: process.env.ORACLE_USER,
+            password: process.env.ORACLE_PASSWORD,
+            connectString:process.env.ORACLE_CONN_STR
         });
 
         const accounts = await connection.execute(
