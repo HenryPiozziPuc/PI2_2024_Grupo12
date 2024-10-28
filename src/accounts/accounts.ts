@@ -1,4 +1,5 @@
 import {Request, RequestHandler, Response} from "express";
+import { DataBaseHandler } from "../DB/connection";
 import OracleDB, { oracleClientVersion } from "oracledb";
 
 /*
@@ -18,16 +19,9 @@ export namespace AccountsHandler {
         role: number
     };
 
-    async function login(email: string, password: string){
+    async function login(email: string, password: string) {
 
-        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-
-        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
-        let connection = await OracleDB.getConnection({
-            user: process.env.ORACLE_USER,
-            password: process.env.ORACLE_PASSWORD,
-            connectString:process.env.ORACLE_CONN_STR
-        });
+        const connection = await DataBaseHandler.GetConnection();
 
         const accounts = await connection.execute(
             'SELECT * FROM ACCOUNTS WHERE EMAIL = :email AND PASSWORD = :password',
@@ -41,12 +35,7 @@ export namespace AccountsHandler {
 
     async function signUp(account: UserAccount){
 
-        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-        let connection = await OracleDB.getConnection({
-            user: "ADMIN",
-            password: "minhasenha",
-            connectString:"dados de conexao servidor oracle"
-        });
+        const connection = await DataBaseHandler.GetConnection();
 
         const accounts = await connection.execute(
             'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE, TOKKEN, ROLE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate,:token,:role)',
