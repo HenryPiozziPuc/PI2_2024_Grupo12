@@ -23,6 +23,12 @@ export async function betOnEvent(req: Request, res: Response) {
         return res.status(400).json({ message: "Evento inválido." });
     }
 
+    if (amount < event.fee) {
+        return res.status(400).json({ 
+            message: "A aposta deve ser maior que a taxa mínima de R${event.fee}." 
+        });
+    }
+
     const Balance = await FinancialHandler.getBalance(CPF);
     if (Balance < amount) {
         return res.status(400).json({ message: "Saldo insuficiente." });
