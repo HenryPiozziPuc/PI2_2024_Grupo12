@@ -5,7 +5,7 @@ import { EventsHandler } from "./events/events";
 
 
 export namespace BetsHandler {
-    {
+    
         export type Bet = {
             CPF: string;
             amount: number
@@ -14,48 +14,80 @@ export namespace BetsHandler {
         }
     }
 
-    export async function betOnEvent(req: Request, res: Response) {
-        const { CPF, amount, eventId } = req.body;
-        
+export async function betOnEvent(req: Request, res: Response) {
+    const { CPF, amount, eventId } = req.body;
+    
 
-        const event = EventsHandler.findEventById(eventId);
-        if (!event) {
-            return res.status(400).json({ message: "Evento inválido." });
-        }
+    const event = EventsHandler.findEventById(eventId);
+    if (!event) {
+        return res.status(400).json({ message: "Evento inválido." });
+    }
 
-        const Balance = await FinancialHandler.getBalance(CPF);
-        if (Balance < amount) {
-            return res.status(400).json({ message: "Saldo insuficiente." });
-        }
+    const Balance = await FinancialHandler.getBalance(CPF);
+    if (Balance < amount) {
+        return res.status(400).json({ message: "Saldo insuficiente." });
+    }
+
+
+    const connection = await OracleDB.getConnection();
+    try {
+        await connection.execute(
+            'INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)',
+            { CPF, eventId, amount },
+            { autoCommit: true }
+        );
 
         const newBalance = await FinancialHandler.withdrawFunds(CPF, amount);
 
-        const connection = await OracleDB.getConnection();
-        try {
-            await connection.execute(
-                'INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)',
-                { CPF, eventId, amount },
-                { autoCommit: true }
-            );
-            res.status(200).json({ message: "Aposta registrada!", event: event.name })
-        }   catch (error) {
-                await connection.rollback();
-                res.status(500).json({ message: "Erro ao registrar a aposta." });
-        } finally {
-            await connection.close();
-        }
+        res.status(200).json({ 
+            message: "Aposta registrada!",
+             event: event.name 
+        });
 
-        if (event.statusEvent === option) {
-            const winnings = amount * event.oddsMultiplier; 
-            await FinancialHandler.addFunds(CPF, winnings);
-            res.status(200).json({
-                message: "Você ganhou a aposta!",
-                winnings: winnings,
-                finalBalance: Balance + winnings
-            });
-        } else {
-            res.status(200).json({ message: "Você perdeu a aposta!" });
-        }
-    
+    }   catch (error) {
+            await connection.rollback();
+            res.status(500).json({ 
+                message: "Erro ao registrar a aposta." 
+        });
+    } 
+    finally {
+        await connection.close();
     }
+
+    if (event.statusEvent === option) { 
+        const winningBets = await connection.execute(
+            'SELECT CPF, amount FROM Bets WHERE eventId = :eventId AND option = :option',
+            { eventId: eventId, option: event.statusEvent } 
+        );
+    
+        const losingBets = await connection.execute(
+            'SELECT amount FROM Bets WHERE eventId = :eventId AND option != :option',
+            { eventId: eventId, option: event.statusEvent } 
+        );
+    
+        
+        const totalWinningAmount = winningBets.rows.reduce((total, bet) => total + bet.amount, 0);
+        const totalLosingAmount = losingBets.rows.reduce((total, bet) => total + bet.amount, 0);
+    
+        for (const bet of winningBets.rows) {
+            const proportionalWinnings = bet.amount + (bet.amount / totalWinningAmount) * totalLosingAmount;
+    
+            await FinancialHandler.addFunds(bet.CPF, proportionalWinnings);
+    
+            if (bet.CPF === CPF) {
+                res.status(200).json({
+                    message: "Você ganhou a aposta!",
+                    winnings: proportionalWinnings,
+                    finalBalance: Balance + proportionalWinnings
+                });
+            }
+        }
+    } else {
+        res.status(200).json({ 
+            message: "Você perdeu a aposta." 
+        });
+    }
+    
+
 }
+
