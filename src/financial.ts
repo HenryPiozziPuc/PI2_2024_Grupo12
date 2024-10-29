@@ -5,12 +5,13 @@ import OracleDB, { oracleClientVersion } from "oracledb";
             pOwnercpf : number;
             balance: number;
         }
-        export const addingfunds =async (req: Request, res: Response) =>{
+        export const addfunds =async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));
             if (!pOwnercpf || !pValue) {
                 return res.status(400).send("CPF e valor são obrigatórios");
             }
+            else{
             try {
                 await AddingFunds(pOwnercpf, pValue);
                 res.send("Fundos adicionados com sucesso!");
@@ -18,27 +19,28 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 console.error("Erro ao adicionar fundos:", error);
                 res.status(500).send("Erro ao adicionar fundos");
             }
-        };
+        }};
+
         export const withdrawfunds =async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));
             if (!pOwnercpf || !pValue) {
                 return res.status(400).send("CPF e valor são obrigatórios");
-            }
+            }else{
             try {
-                await WithdrawFunds(pOwnercpf, pValue);
+                await gettingFunds(pOwnercpf, pValue);
                 res.send("Fundos retirados com sucesso!");
             } catch (error) {
                 console.error("Erro ao retirar fundos:", error);
                 res.status(500).send("Erro ao adicionar fundos");
             }
-        };
+        }};
         
         async function AddingFunds(pOwnercpf: number,value: number){
             OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-            let connection;
+            
             try {
-                connection = await OracleDB.getConnection();
+                const connection = await OracleDB.getConnection();
                 const oldbalance = (await connection.execute(
                 `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
                 { cpf: pOwnercpf }
@@ -58,10 +60,9 @@ import OracleDB, { oracleClientVersion } from "oracledb";
     
         }
 
-        async function WithdrawFunds(pOwnercpf:number,value:number){
-            let connection;
+        async function gettingFunds(pOwnercpf:number,value:number){
             try {
-                connection = await OracleDB.getConnection();
+                const connection = await OracleDB.getConnection();
                 const oldbalance = (await connection.execute(
                     `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
                     { cpf: pOwnercpf }
