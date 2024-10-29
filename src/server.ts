@@ -1,50 +1,42 @@
 import express from "express";
-import {Request, Response, Router} from "express";
+import { Request, Response, Router } from "express";
 import { AccountsHandler } from "./accounts/accounts";
-import { FinancialHandler } from "./financial/financial";
-import { EventsHandler } from "./events/events";
 import { BetsHandler } from "./bets/bets";
+import { EventsHandler } from "./events/events";
+import { FinancialHandler } from "./financial/financial";
 
 const port = 3000; 
 const server = express();
 const routes = Router();
 
-// definir as rotas. 
-// a rota tem um verbo/método http (GET, POST, PUT, DELETE)
+// A rota tem um verbo/método http (GET, POST, PUT, DELETE)
 routes.get('/', (req: Request, res: Response) => {
     res.statusCode = 403;
     res.send('Acesso não permitido.');
 });
 
-//accounts
+// Accounts
 routes.post('/login', AccountsHandler.loginHandler);
 routes.put('/signUp', AccountsHandler.registerHandler);
 
-// Financial
-routes.post('/addFunds', FinancialHandler.AddingFunds);
-
-routes.post('/withdrawFunds', FinancialHandler.);
+// Bets
+routes.post('/betOnEvent', BetsHandler.);
+routes.post('/finishEvent', BetsHandler.);
+routes.get('searchEvent', BetsHandler.);
 
 // Events
 routes.put('/addNewEvent', EventsHandler.addNewEvent);
+routes.get('/getEvents', EventsHandler.getEvents);
+routes.delete('/deleteEvent', EventsHandler.deleteEvent);
+routes.post('/evaluateNewEvent', EventsHandler.evaluateNewEvent);
 
-routes.get('/getEvents', EventsHandler.);
 
-routes.delete('/deleteEvents', EventsHandler.);
-
-routes.post('evaluateNewEvent', EventsHandler.);
-
-// Bets
-routes.post('/betOnEvent', BetsHandler.);
-
-routes.post('/finishEvent', BetsHandler.);
-
-routes.get('searchEvent', BetsHandler.);
+// Financial
+routes.post('/addFunds', FinancialHandler.AddingFunds);
+routes.post('/withdrawFunds', FinancialHandler.);
 
 server.use(routes);
 
-server.listen(port, ()=>{
+server.listen(port, () => {
     console.log(`Server is running on: ${port}`);
 })
-
-//sempre q usar o await precisa do async 

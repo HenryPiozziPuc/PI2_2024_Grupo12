@@ -23,7 +23,7 @@ export namespace FinancialHandler{
             const oldbalance = getWalletBalanceHandler;
             const pValue = req.get('retrieved value');
             const pNewValue = oldbalance - pValue;
-            if(pValue > oldbalance){
+            if (pValue > oldbalance){
                 res.statusCode = 400;
                 res.send("Retire um valor menor do que o saldo!")
             }

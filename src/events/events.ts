@@ -73,7 +73,7 @@ export namespace EventsHandler {
             try {
                 const rowsDeleted = await deleteEventByID(eventId);
 
-                if(rowsDeleted > 0) {
+                if (rowsDeleted > 0) {
                     res.status(200).json({ message: `Evento com ID ${eventId} deletado com sucesso.` });
                 }else {
                     res.status(404).json({ message: `Evento com ID ${eventId} nao encontrado. `});

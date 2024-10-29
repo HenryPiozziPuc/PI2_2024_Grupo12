@@ -15,7 +15,7 @@ export namespace AccountsHandler {
         password:string,
         phoneNumber: number,
         birthdate: Date,
-        tokken: string | undefined,
+        token: string | undefined,
         role: number
     };
 
@@ -38,8 +38,8 @@ export namespace AccountsHandler {
         const connection = await DataBaseHandler.GetConnection();
 
         const accounts = await connection.execute(
-            'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE, TOKKEN, ROLE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate,:token,:role)',
-            [account.CPF, account.completeName, account.email, account.password, account.phoneNumber, account.birthdate, account.tokken, account.role]
+            'INSERT INTO ACCOUNTS (CPF, COMPLETE_NAME, EMAIL, PASSWORD, PHONE_NUMBER, BIRHTDATE, TOKEN, ROLE) VALUES(:cpf,:name,:email,:password,:phone, :phone_number, :birthdate,:token,:role)',
+            [account.CPF, account.completeName, account.email, account.password, account.phoneNumber, account.birthdate, account.token, account.role]
         );
 
         await connection.commit();
@@ -79,7 +79,7 @@ export namespace AccountsHandler {
                 password: pPassword,
                 phoneNumber: Number(pPhoneNumber),
                 birthdate: new Date(pBirthdate),
-                tokken: undefined,
+                token: undefined,
                 role: 0
             }
 
