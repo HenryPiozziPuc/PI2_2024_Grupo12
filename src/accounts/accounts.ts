@@ -47,11 +47,9 @@ export namespace AccountsHandler {
             const rows: string[][] = result.rows as string[][];
             
             if (rows && rows.length > 0) {
-                // Acesso correto ao valor da senha
                 const storedPassword = rows[0][0]; // Acesso ao primeiro elemento da primeira linha
                 console.log(`A senha encontrada é: ${storedPassword} e a senha digitada foi: ${password}`);
             
-                // Compare as senhas
                 if (storedPassword === password) {
                     const token = await generateToken();
                     // Atualizando o token no Oracle Cloud
