@@ -5,6 +5,7 @@ import OracleDB, { oracleClientVersion } from "oracledb";
             pOwnercpf : number;
             balance: number;
         }
+        const wallets: Wallet[] = [];
         export const addfunds =async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));
@@ -35,7 +36,9 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 res.status(500).send("Erro ao adicionar fundos");
             }
         }};
-        
+        function findWallet(cpf: number): Wallet | undefined {
+            return wallets.find(wallet => wallet.pOwnercpf === cpf);
+        }
         async function AddingFunds(pOwnercpf: number,value: number){
             OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
             let connection = await OracleDB.getConnection({
@@ -43,26 +46,24 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 password: process.env.ORACLE_PASSWORD,
                 connectString:process.env.ORACLE_CONN_STR
             });
+            let wallet = findWallet(pOwnercpf);
+            if (!wallet) {
+                wallet = { pOwnercpf: pOwnercpf, balance: 0 };
+                wallets.push(wallet);
+
             try {
-                const oldbalance = (await connection.execute(
-                `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
-                { cpf: pOwnercpf }
-            )).rows[0]?.BALANCE || 0;
-                const newbalance = oldbalance + value;
+                const newbalance = wallet.balance += value;
                 const result = await connection.execute(
                     `UPDATE WALLET SET BALANCE = balance WHERE CPF =:`,
                     {cpf:pOwnercpf},
                     {balance:newbalance}
                 )
-            
-        
         }
         catch(error){
             console.error(error);
         }
-    
         }
-
+    }
         async function gettingFunds(pOwnercpf:number,value:number){
             OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
             let connection = await OracleDB.getConnection({
@@ -70,14 +71,12 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 password: process.env.ORACLE_PASSWORD,
                 connectString:process.env.ORACLE_CONN_STR
             });
+            let wallet = findWallet(pOwnercpf);
+            if (!wallet) {
+                return Response.status(404).send("Carteira não encontrada");
+            }
             try {
-                
-                const oldbalance = (await connection.execute(
-                    `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
-                    { cpf: pOwnercpf }
-                )).rows[0]?.BALANCE || 0;
-    
-                if (value > oldbalance) {
+                if (wallet.balance < value ) {
                     Response.send("Valor de retirada maior do que o saldo disponível");
                     return;
                 }
@@ -92,7 +91,7 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                     value *= 1 - (1 / 100);
                 }
     
-                const newbalance = oldbalance - value;
+                const newbalance = wallet.balance -= value;
                 await connection.execute(
                     `UPDATE WALLET SET BALANCE = :balance WHERE CPF = :cpf`,
                     { cpf: pOwnercpf, balance: newbalance }
@@ -102,5 +101,4 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 console.error(error);
                     }
             }
-        
-            }
+        }
