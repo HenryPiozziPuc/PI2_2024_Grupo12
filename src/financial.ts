@@ -38,9 +38,12 @@ import OracleDB, { oracleClientVersion } from "oracledb";
         
         async function AddingFunds(pOwnercpf: number,value: number){
             OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-            
+            let connection = await OracleDB.getConnection({
+                user: process.env.ORACLE_USER,
+                password: process.env.ORACLE_PASSWORD,
+                connectString:process.env.ORACLE_CONN_STR
+            });
             try {
-                const connection = await OracleDB.getConnection();
                 const oldbalance = (await connection.execute(
                 `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
                 { cpf: pOwnercpf }
@@ -61,8 +64,14 @@ import OracleDB, { oracleClientVersion } from "oracledb";
         }
 
         async function gettingFunds(pOwnercpf:number,value:number){
+            OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
+            let connection = await OracleDB.getConnection({
+                user: process.env.ORACLE_USER,
+                password: process.env.ORACLE_PASSWORD,
+                connectString:process.env.ORACLE_CONN_STR
+            });
             try {
-                const connection = await OracleDB.getConnection();
+                
                 const oldbalance = (await connection.execute(
                     `SELECT BALANCE FROM WALLET WHERE CPF = :cpf`,
                     { cpf: pOwnercpf }
