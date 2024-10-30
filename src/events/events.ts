@@ -31,9 +31,9 @@ export namespace EventsHandler {
 
         // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
         let connection = await OracleDB.getConnection({
-            user: "ADMIN",
-            password: "minhasenha",
-            connectString:"dados de conexao servidor oracle"
+            user: process.env.ORACLE_USER,
+            password: process.env.ORACLE_PASSWORD,
+            connectString:process.env.ORACLE_CONN_STR
         });
 
         const accounts = await connection.execute(
@@ -46,26 +46,19 @@ export namespace EventsHandler {
         console.dir(accounts.rows);
     }
 
-    async function deleteEventByID(EventId: number): Promise<number> {
+    async function deleteEventByID(EventId: number){
         OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
         let connection;
-        
         try {
-            connection = await OracleDB.getConnection({
-                user: "ADMIN",
-                password: "minhasenha",
-                connectString: "dados de conexao servidor oracle"
-        });
+            connection = await OracleDB.getConnection();
             const result = await connection.execute(
                 `DELETE FROM EVENTS WHERE ID = :id`,
                 {id: EventId},
                 {autoCommit: true}
             );
-            
-            return result.rowsAffected || 0; // Faz com que retorne o numero de linhas deletadas
+            return result.rowsAffected // Faz com que retorne o numero de linhas deletadas
         } catch (error){
-            console.error("Erro ao deletar evento: ", error);
-            return 0;
+            console.error(error);
         } finally {
             if(connection){
                 await connection.close();
@@ -86,7 +79,7 @@ export namespace EventsHandler {
                     res.status(404).json({ message: `Evento com ID ${eventId} nao encontrado. `});
                 }
             } catch (error) {
-                res.status(500).json({ message: "Erro interno ao deletar evento", error});
+                res.status(500).json({ message: "Erro interno ao deletar evento", error: error.message });
             }
         } else {
             res.status(400).json({ message: "ID inválido." });
