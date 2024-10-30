@@ -15,7 +15,18 @@ export namespace BetsHandler {
     }
 
 export async function betOnEvent(req: Request, res: Response) {
+   
+    OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
+
+        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
+        let connection = await OracleDB.getConnection({
+            user: process.env.ORACLE_USER,
+            password: process.env.ORACLE_PASSWORD,
+            connectString:process.env.ORACLE_CONN_STR
+        });
+
     const { CPF, amount, eventId } = req.body;
+    
     
 
     const event = EventsHandler.findEventById(eventId);
@@ -35,7 +46,6 @@ export async function betOnEvent(req: Request, res: Response) {
     }
 
 
-    const connection = await OracleDB.getConnection();
     try {
         await connection.execute(
             'INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)',
