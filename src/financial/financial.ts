@@ -9,6 +9,7 @@ export namespace FinancialHandler{
     
     export const AddingFunds : RequestHandler = (req: Request, res: Response) => {
         const pOwnerEmail = req.get('email');
+        
         if (pOwnerEmail){
             const oldbalance = getWalletBalance(pOwnerEmail);
             const pBalance = req.get('added value');

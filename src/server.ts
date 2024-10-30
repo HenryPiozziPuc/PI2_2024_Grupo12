@@ -4,6 +4,7 @@ import { AccountsHandler } from "./accounts/accounts";
 import { BetsHandler } from "./bets/bets";
 import { EventsHandler } from "./events/events";
 import { FinancialHandler } from "./financial/financial";
+import { DataBaseHandler } from './DB/connection'
 
 const port = 3000; 
 const server = express();
@@ -19,10 +20,12 @@ routes.get('/', (req: Request, res: Response) => {
 routes.post('/login', AccountsHandler.loginHandler);
 routes.put('/signUp', AccountsHandler.registerHandler);
 
+/*
 // Bets
-routes.post('/betOnEvent', BetsHandler.);
-routes.post('/finishEvent', BetsHandler.);
-routes.get('searchEvent', BetsHandler.);
+routes.post('/betOnEvent', BetsHandler.betOnEvent);
+routes.post('/finishEvent', BetsHandler.finishEvent);
+routes.get('searchEvent', BetsHandler.searchEvent);
+
 
 // Events
 routes.put('/addNewEvent', EventsHandler.addNewEvent);
@@ -30,10 +33,10 @@ routes.get('/getEvents', EventsHandler.getEvents);
 routes.delete('/deleteEvent', EventsHandler.deleteEvent);
 routes.post('/evaluateNewEvent', EventsHandler.evaluateNewEvent);
 
-
 // Financial
 routes.post('/addFunds', FinancialHandler.AddingFunds);
-routes.post('/withdrawFunds', FinancialHandler.);
+routes.post('/withdrawFunds', FinancialHandler.withdrawFunds);
+*/
 
 server.use(routes);
 

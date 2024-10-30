@@ -25,7 +25,7 @@ export namespace EventsHandler {
         approved: boolean,
     };
 
-    async function login(email: string, password: string){
+    async function login(email: string, password: string) {
 
         OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
 
