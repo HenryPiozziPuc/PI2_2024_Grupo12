@@ -1,8 +1,8 @@
 import {Request, RequestHandler, Response} from "express";
-import OracleDB, { oracleClientVersion } from "oracledb";
-import { FinancialHandler } from "./financial/financial";
-import { EventsHandler } from "./events/events";
-
+import OracleDB, { getConnection, oracleClientVersion } from "oracledb";
+import { FinancialHandler } from "../financial/financial";
+import { EventsHandler } from "../events/events";
+import { DataBaseHandler } from "../DB/connection";
 
 export namespace BetsHandler {
     
@@ -19,11 +19,7 @@ export async function betOnEvent(req: Request, res: Response) {
     OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
 
         // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
-        let connection = await OracleDB.getConnection({
-            user: process.env.ORACLE_USER,
-            password: process.env.ORACLE_PASSWORD,
-            connectString:process.env.ORACLE_CONN_STR
-        });
+        let connection = await DataBaseHandler.GetConnection();
 
     const { CPF, amount, eventId } = req.body;
     
@@ -106,4 +102,3 @@ export async function betOnEvent(req: Request, res: Response) {
     
 
 }
-
