@@ -1,4 +1,5 @@
 import {Request, RequestHandler, Response} from "express";
+import { DataBaseHandler } from "../DB/connection";
 import OracleDB, { oracleClientVersion } from "oracledb";
 
 /*
@@ -14,124 +15,141 @@ CREATE TABLE EVENTS(
 */
 
 export namespace EventsHandler {
-    
-    //Tipo UserAccount
-    export type Events = {
+
+    export type Event = {
         name: string,
         category: string,
-        fee:number,
+        fee: number,
         start_date: Date,
         end_date: Date,
         approved: boolean,
+        removed: boolean
     };
 
-    async function login(email: string, password: string){
-
-        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-
-        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
-        let connection = await OracleDB.getConnection({
-            user: process.env.ORACLE_USER,
-            password: process.env.ORACLE_PASSWORD,
-            connectString:process.env.ORACLE_CONN_STR
-        });
-
-        const accounts = await connection.execute(
-            'SELECT * FROM ACCOUNTS WHERE EMAIL = :email AND PASSWORD = :password',
-            [email, password]
-        );
-
-        await connection.close();
-
-        console.dir(accounts.rows);
-    }
-
-    async function deleteEventByID(EventId: number){
-        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-        let connection;
-        try {
-            connection = await OracleDB.getConnection();
-            const result = await connection.execute(
-                `DELETE FROM EVENTS WHERE ID = :id`,
-                {id: EventId},
-                {autoCommit: true}
-            );
-            return result.rowsAffected // Faz com que retorne o numero de linhas deletadas
-        } catch (error){
-            console.error(error);
-        } finally {
-            if(connection){
-                await connection.close();
-            }
-        }
-    }
-
-    export const deleteEvent: RequestHandler = async (req: Request, res: Response) => {
-        const eventId = parseInt(req.params.id); // Serve para pegar o ID do evento via URL
-
-        if(!isNaN(eventId)) { // NaN = Not-a-Number, ou seja, retorna true quando o valor eh um numero valido
-            try {
-                const rowsDeleted = await deleteEventByID(eventId);
-
-                if(rowsDeleted > 0) {
-                    res.status(200).json({ message: `Evento com ID ${eventId} deletado com sucesso.` });
-                }else {
-                    res.status(404).json({ message: `Evento com ID ${eventId} nao encontrado. `});
-                }
-            } catch (error) {
-                res.status(500).json({ message: "Erro interno ao deletar evento", error: error.message });
-            }
-        } else {
-            res.status(400).json({ message: "ID inválido." });
-        };
-    }
+    // Serviço de criação de evento /addNewEvent
+    export const addNewEvent: RequestHandler = async (req: Request, res: Response) => {
+        const { name, category, fee, startDate, endDate } = req.body;
     
-    async function createEvent(name:string, category:string, fee: number, start_date: Date, end_date: Date, approved: boolean){
-
-        OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-        let connection = await OracleDB.getConnection({
-            user: "ADMIN",
-            password: "minhasenha",
-            connectString:"dados de conexao servidor oracle"
-        });
-
-        const accounts = await connection.execute(
-            'INSERT INTO EVENTS (name, category, fee, start_date, end_date, approved) VALUES(:name, :category, :fee, :start_date, :end_date, :approved)',
-            [name, category, fee, start_date, end_date, approved]
-        );
-        
-        await connection.close();
-
-        console.dir(accounts.rows);
+        if (!name || !category || !fee || !startDate || !endDate) {
+            res.status(400).json({ message: "Parâmetros de evento inválidos." });
+            return;  // Agora estamos usando `return` para encerrar a função após enviar a resposta
+        }
+    
+        // Convertendo variáveis para tipos corretos e validando datas
+        const parsedFee = Number(fee);
+        const parsedStartDate = new Date(startDate);
+        const parsedEndDate = new Date(endDate);
+    
+        if (isNaN(parsedFee) || isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+            res.status(400).json({ message: "Parâmetros de evento com tipos inválidos." });
+            return;
+        }
+    
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            
+            await connection.execute(
+                `INSERT INTO EVENTS (NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, REMOVED) 
+                 VALUES (:name, :category, :fee, :startDate, :endDate, :approved, :removed)`,
+                {
+                    name,
+                    category,
+                    fee: parsedFee,
+                    startDate: parsedStartDate,
+                    endDate: parsedEndDate,
+                    approved: 0,   // false como 0
+                    removed: 0     // false como 0
+                },
+                { autoCommit: true }
+            );
+    
+            res.status(201).json({ message: `Evento "${name}" criado com sucesso e aguardando aprovação.` });
+        } catch (error) {
+            console.error("Erro ao criar evento:", error);
+            res.status(500).json({ message: "Erro ao criar evento.", error });
+        } finally {
+            if (connection) await connection.close();
+        }
     }
 
-    export const addNewEvent: RequestHandler = (req: Request, res: Response) => {
-        const pName = req.get('name');
-        const pCategory = req.get('category');
-        const pFee = req.get('Fee');
-        const pStartDate = req.get('startDate');
-        const pEndDate = req.get('endDate');
-        const pApproved = req.get('approved');
+    // Serviço de obtenção de eventos /getEvents
+    export const getEvents: RequestHandler = async (req, res) => {
+        const { status } = req.query;
+        let query = "SELECT * FROM EVENTS WHERE REMOVED = 0";
+        if (status === "approved") query += " AND APPROVED = 1";
+        else if (status === "pending") query += " AND APPROVED = 0";
 
-        if (pName && pCategory && pFee && pStartDate && pEndDate && pApproved) {
-            const Events: Events = {
-                name: pName,
-                category: pCategory,
-                fee: Number(pFee),
-                start_date: new Date(pStartDate),
-                end_date: new Date(pEndDate),
-                approved: Boolean (pApproved)
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            const result = await connection.execute(query);
+            res.status(200).json(result.rows);
+        } catch (error) {
+            console.error("Erro ao obter eventos:", error);
+            res.status(500).json({ message: "Erro ao obter eventos.", error });
+        } finally {
+            if (connection) await connection.close();
+        }
+    }
+
+    // Serviço de remoção lógica de evento /deleteEvent
+    export const deleteEvent: RequestHandler = async (req: Request, res: Response) => {
+        const eventId = parseInt(req.params.id);
+    
+        if (isNaN(eventId)) {
+            res.status(400).json({ message: "ID inválido." });
+            return;  // Encerra a função após enviar a resposta
+        }
+    
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            const result = await connection.execute(
+                `UPDATE EVENTS SET REMOVED = 1 WHERE ID = :id AND APPROVED = 0`,
+                { id: eventId },
+                { autoCommit: true }
+            );
+    
+            if (result.rowsAffected) {
+                res.status(200).json({ message: `Evento com ID ${eventId} marcado como removido.` });
+            } else {
+                res.status(404).json({ message: `Evento com ID ${eventId} não encontrado ou já aprovado.` });
             }
+        } catch (error) {
+            console.error("Erro ao remover evento:", error);
+            res.status(500).json({ message: "Erro ao remover evento.", error });
+        } finally {
+            if (connection) await connection.close();
+        }
+    }
 
-            const ID = createEvent(Events.name, Events.category, Events.fee, Events.start_date, Events.end_date, Events.approved);
-            
-            res.statusCode = 200; 
-            res.send(`Nova conta adicionada. Código: ${ID}`);
+    // Serviço de avaliação de evento (aprovação ou rejeição) /evaluateNewEvent
+    export const evaluateNewEvent: RequestHandler = async (req, res) => {
+        const eventId = parseInt(req.params.id);
+        const { approved } = req.body;
 
-        } else {
-            res.statusCode = 400;
-            res.send("Parâmetros inválidos ou faltantes.");
+        if (isNaN(eventId) || approved === undefined) {
+            res.status(400).json({ message: "Parâmetros de avaliação inválidos." });
+            return;
         }
 
-    };
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            const result = await connection.execute(
+                `UPDATE EVENTS SET APPROVED = :approved WHERE ID = :id`,
+                { approved: approved ? 1 : 0, id: eventId },
+                { autoCommit: true }
+            );
+
+            if (result.rowsAffected) {
+                const status = approved ? "aprovado" : "rejeitado";
+                res.status(200).json({ message: `Evento com ID ${eventId} foi ${status}.` });
+            } else {
+                res.status(404).json({ message: `Evento com ID ${eventId} não encontrado.` });
+            }
+        } catch (error) {
+            console.error("Erro ao avaliar evento:", error);
+            res.status(500).json({ message: "Erro ao avaliar evento.", error });
+        } finally {
+            if (connection) await connection.close();
+        }
+    }
 }
