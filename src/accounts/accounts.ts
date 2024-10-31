@@ -3,7 +3,7 @@ import { DataBaseHandler } from "../DB/connection";
 import OracleDB, { oracleClientVersion } from "oracledb";
 
 /* Nampespace que contém tudo sobre "contas de usuários" */
-export namespace AccountsHandler {
+export namespace AccountsManager {
     
     //Tipo UserAccount
     export type UserAccount = {
@@ -81,14 +81,12 @@ export namespace AccountsHandler {
         if (pEmail && pPassword) {
             const token = await login(pEmail, pPassword);
             res.statusCode = 200; 
-            res.send('Login efetuado com sucesso e token gerado e inserido na tabela de Tokens.');
+            res.send('Login efetuado com sucesso, token gerado e inserido na coluna TOKENS da tabela ACCOUNTS.');
 
         } else {
             res.statusCode = 400;
             res.send("Parâmetros inválidos ou faltantes.");
         }
-
-        
     };
     
     /* createWallet Funcionando */
@@ -117,8 +115,8 @@ export namespace AccountsHandler {
         await connection.close();
     }
     
-    /* RegisterHandler funcionando */
-    export const registerHandler: RequestHandler = async (req: Request, res: Response) => {
+    /* SignUpHandler funcionando */
+    export const SignUpHandler: RequestHandler = async (req: Request, res: Response) => {
         const pCPF = parseInt(req.get('CPF') || '', 10);
         const pName = req.get('name');
         const pEmail = req.get('email');

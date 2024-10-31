@@ -1,11 +1,16 @@
 import {Request, RequestHandler, Response} from "express";
 import OracleDB, { oracleClientVersion } from "oracledb";
-    export namespace FinancialHandler{
+
+/* Nampespace que contém tudo sobre "contas de usuários" */
+    export namespace FinancialManager{
+        
         export type Wallet = {
             pOwnercpf : number;
             balance: number;
         }
+
         const wallets: Wallet[] = [];
+
         export const addfunds =async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));
@@ -22,7 +27,7 @@ import OracleDB, { oracleClientVersion } from "oracledb";
             }
         }};
 
-        export const withdrawfunds =async (req: Request, res: Response) =>{
+        export const withdrawfunds = async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));
             if (!pOwnercpf || !pValue) {
@@ -46,7 +51,9 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 password: process.env.ORACLE_PASSWORD,
                 connectString:process.env.ORACLE_CONN_STR
             });
+
             let wallet = findWallet(pOwnercpf);
+            
             if (!wallet) {
                 wallet = { pOwnercpf: pOwnercpf, balance: 0 };
                 wallets.push(wallet);

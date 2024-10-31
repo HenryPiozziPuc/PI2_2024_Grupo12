@@ -1,10 +1,10 @@
 import {Request, RequestHandler, Response} from "express";
 import OracleDB, { getConnection, oracleClientVersion } from "oracledb";
-import { FinancialHandler } from "../financial/financial";
-import { EventsHandler } from "../events/events";
+import { FinancialManager } from "../financial/financial";
+import { EventsManager } from "../events/events";
 import { DataBaseHandler } from "../DB/connection";
 
-export namespace BetsHandler {
+export namespace BetsManager {
     
         export type Bet = {
             CPF: string;
@@ -25,7 +25,7 @@ export async function betOnEvent(req: Request, res: Response) {
     
     
 
-    const event = EventsHandler.findEventById(eventId);
+    const event = EventsManager.findEventById(eventId);
     if (!event) {
         return res.status(400).json({ message: "Evento inválido." });
     }
@@ -36,7 +36,7 @@ export async function betOnEvent(req: Request, res: Response) {
         });
     }
 
-    const Balance = await FinancialHandler.getBalance(CPF);
+    const Balance = await FinancialManager.getBalance(CPF);
     if (Balance < amount) {
         return res.status(400).json({ message: "Saldo insuficiente." });
     }
@@ -49,7 +49,7 @@ export async function betOnEvent(req: Request, res: Response) {
             { autoCommit: true }
         );
 
-        const newBalance = await FinancialHandler.withdrawFunds(CPF, amount);
+        const newBalance = await FinancialManager.withdrawfunds (CPF, amount);
 
         res.status(200).json({ 
             message: "Aposta registrada!",
@@ -84,7 +84,7 @@ export async function betOnEvent(req: Request, res: Response) {
         for (const bet of winningBets.rows) {
             const proportionalWinnings = bet.amount + (bet.amount / totalWinningAmount) * totalLosingAmount;
     
-            await FinancialHandler.addFunds(bet.CPF, proportionalWinnings);
+            await FinancialManager.addFunds(bet.CPF, proportionalWinnings);
     
             if (bet.CPF === CPF) {
                 res.status(200).json({

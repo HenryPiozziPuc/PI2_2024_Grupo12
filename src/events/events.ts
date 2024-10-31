@@ -13,7 +13,7 @@ CREATE TABLE EVENTS(
 );
 */
 
-export namespace EventsHandler {
+export namespace EventsManager {
     
     //Tipo UserAccount
     export type Events = {

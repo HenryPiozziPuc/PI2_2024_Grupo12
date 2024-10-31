@@ -1,9 +1,9 @@
 import express from "express";
 import { Request, Response, Router } from "express";
-import { AccountsHandler } from "./accounts/accounts";
-import { BetsHandler } from "./bets/bets";
-import { EventsHandler } from "./events/events";
-import { FinancialHandler } from "./financial/financial";
+import { AccountsManager } from "./accounts/accounts";
+import { BetsManager } from "./bets/bets";
+import { EventsManager } from "./events/events";
+import { FinancialManager } from "./financial/financial-final";
 import { DataBaseHandler } from './DB/connection'
 
 const port = 3000; 
@@ -17,26 +17,27 @@ routes.get('/', (req: Request, res: Response) => {
 });
 
 // Accounts
-routes.post('/login', AccountsHandler.loginHandler);
-routes.put('/signUp', AccountsHandler.registerHandler);
+routes.post('/login', AccountsManager.loginHandler);
+routes.put('/signUp', AccountsManager.SignUpHandler);
 
 /*
 // Bets
-routes.post('/betOnEvent', BetsHandler.betOnEvent);
-routes.post('/finishEvent', BetsHandler.finishEvent);
-routes.get('searchEvent', BetsHandler.searchEvent);
+routes.post('/betOnEvent', BetsManager.betOnEvent);
+routes.post('/finishEvent', BetsManager.finishEvent);
+routes.get('searchEvent', BetsManager.searchEvent);
 
 
 // Events
-routes.put('/addNewEvent', EventsHandler.addNewEvent);
-routes.get('/getEvents', EventsHandler.getEvents);
-routes.delete('/deleteEvent', EventsHandler.deleteEvent);
-routes.post('/evaluateNewEvent', EventsHandler.evaluateNewEvent);
+routes.put('/addNewEvent', EventsManager.addNewEvent);
+routes.get('/getEvents', EventsManager.getEvents);
+routes.delete('/deleteEvent', EventsManager.deleteEvent);
+routes.post('/evaluateNewEvent', EventsManager.evaluateNewEvent);
+*/
 
 // Financial
-routes.post('/addFunds', FinancialHandler.AddingFunds);
-routes.post('/withdrawFunds', FinancialHandler.withdrawFunds);
-*/
+routes.put('/addFunds', FinancialManager.AddFundsHandler);
+// routes.put('/withdrawFunds', FinancialManager.withdrawFundsHandler);
+
 
 server.use(routes);
 
