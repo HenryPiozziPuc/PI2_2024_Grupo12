@@ -1,104 +1,132 @@
-import {Request, RequestHandler, Response} from "express";
-import OracleDB, { getConnection, oracleClientVersion } from "oracledb";
-import { FinancialHandler } from "../financial/financial";
-import { EventsHandler } from "../events/events";
-import { DataBaseHandler } from "../DB/connection";
+import { Request, Response } from "express";
+import OracleDB from "oracledb";
+import { FinancialHandler } from "./financial/financial";
+import { EventsHandler } from "./events/events";
 
 export namespace BetsHandler {
-    
-        export type Bet = {
-            CPF: string;
-            amount: number
-            eventId: string;
-            option: number;
-        }
-    }
+    export type Bet = {
+        email: string; 
+        amount: number;
+        eventId: string;
+        choice: number;  
+    };
+}
 
-export async function betOnEvent(req: Request, res: Response) {
-   
+// Função para registrar uma aposta.
+export async function placeBet(req: Request, res: Response) {
+    const { email, amount, eventId, choice } = req.body; 
+
     OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
 
-        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
-        let connection = await DataBaseHandler.GetConnection();
-
-    const { CPF, amount, eventId } = req.body;
-    
-    
-
-    const event = EventsHandler.findEventById(eventId);
-    if (!event) {
-        return res.status(400).json({ message: "Evento inválido." });
-    }
-
-    if (amount < event.fee) {
-        return res.status(400).json({ 
-            message: "A aposta deve ser maior que a taxa mínima de R${event.fee}." 
-        });
-    }
-
-    const Balance = await FinancialHandler.getBalance(CPF);
-    if (Balance < amount) {
-        return res.status(400).json({ message: "Saldo insuficiente." });
-    }
-
-
+    let connection;
     try {
+        connection = await OracleDB.getConnection({
+            user: process.env.ORACLE_USER,
+            password: process.env.ORACLE_PASSWORD,
+            connectString: process.env.ORACLE_CONN_STR,
+        });
+
+        // Verifica se o token associado ao email existe.
+        const tokenResult = await connection.execute(
+            'SELECT TOKEN FROM Users WHERE email = :email', 
+            { email }
+        );
+
+        const token = tokenResult.rows[0]?.TOKEN;
+        if (token === null) { 
+            return res.status(400).json({ message: "Token inválido ou inexistente." });
+        }
+
+        // Verifica se o evento existe.
+        const event = EventsHandler.findEventById(eventId);
+        if (!event) {
+            return res.status(400).json({ message: "Evento inválido." });
+        }
+
+        // Obtém o saldo do apostador e verifica se é maior que a taxa mínima.
+        const balance = await FinancialHandler.getBalance(email); 
+        if (balance < event.fee) {
+            return res.status(400).json({
+                message: "Saldo insuficiente..",
+            });
+        }
+
+        // Verifica se a aposta é maior do que a taxa mínima.
+        if (amount < event.fee) {
+            return res.status(400).json({
+                message: `A aposta deve ser maior que a taxa mínima de R$${event.fee}.`,
+            });
+        }
+
+
+        // Obtém o saldo do apostador e verifica se é suficiente para a aposta.
+        if (balance < amount) {
+            return res.status(400).json({ message: "Saldo insuficiente." });
+        }
+
+        // Insere a nova aposta no banco de dados.
         await connection.execute(
-            'INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)',
-            { CPF, eventId, amount },
+            'INSERT INTO Bets (email, eventId, amount, choice) VALUES (:email, :eventId, :amount, :choice)', 
+            { email, eventId, amount, choice },
             { autoCommit: true }
         );
 
-        const newBalance = await FinancialHandler.withdrawFunds(CPF, amount);
+        await FinancialHandler.withdrawFunds(email, amount); 
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: "Aposta registrada!",
-             event: event.name 
+            event: event.name,
         });
-
-    }   catch (error) {
-            await connection.rollback();
-            res.status(500).json({ 
-                message: "Erro ao registrar a aposta." 
-        });
-    } 
-    finally {
-        await connection.close();
+    } catch (error) {
+        if (connection) await connection.rollback();
+        res.status(500).json({ message: "Erro ao registrar a aposta." });
+    } finally {
+        if (connection) await connection.close();
     }
+}
 
-    if (event.statusEvent === option) { 
+// Função para processar o resultado das apostas de um evento.
+export async function processBetResult(req: Request, res: Response) {
+    const { eventId } = req.body;
+    let connection;
+
+    try {
+        connection = await OracleDB.getConnection({
+            user: process.env.ORACLE_USER,
+            password: process.env.ORACLE_PASSWORD,
+            connectString: process.env.ORACLE_CONN_STR,
+        });
+
+        // Verifica se o evento existe.
+        const event = EventsHandler.findEventById(eventId);
+        if (!event) {
+            return res.status(400).json({ message: "Evento inválido." });
+        }
+
+        // Seleciona as apostas vencedoras.
         const winningBets = await connection.execute(
-            'SELECT CPF, amount FROM Bets WHERE eventId = :eventId AND option = :option',
-            { eventId: eventId, option: event.statusEvent } 
+            'SELECT email, amount FROM Bets WHERE eventId = :eventId AND choice = :choice', 
+            { eventId, choice: event.statusEvent }
         );
-    
+
+        // Seleciona as apostas perdedoras.
         const losingBets = await connection.execute(
-            'SELECT amount FROM Bets WHERE eventId = :eventId AND option != :option',
-            { eventId: eventId, option: event.statusEvent } 
+            'SELECT amount FROM Bets WHERE eventId = :eventId AND choice != :choice',
+            { eventId, choice: event.statusEvent }
         );
-    
-        
+
+        // Calcula a aposta total das apostas vencedoras e perdedoras.
         const totalWinningAmount = winningBets.rows.reduce((total, bet) => total + bet.amount, 0);
         const totalLosingAmount = losingBets.rows.reduce((total, bet) => total + bet.amount, 0);
-    
+
+        // Para cada aposta vencedora, calcula e credita os ganhos proporcionais.
         for (const bet of winningBets.rows) {
             const proportionalWinnings = bet.amount + (bet.amount / totalWinningAmount) * totalLosingAmount;
-    
-            await FinancialHandler.addFunds(bet.CPF, proportionalWinnings);
-    
-            if (bet.CPF === CPF) {
-                res.status(200).json({
-                    message: "Você ganhou a aposta!",
-                    winnings: proportionalWinnings,
-                    finalBalance: Balance + proportionalWinnings
-                });
-            }
+            await FinancialHandler.addFunds(bet.email, proportionalWinnings); 
         }
-    } else {
-        res.status(200).json({ 
-            message: "Você perdeu a aposta." 
-        });
+    } catch (error) {
+        console.error("Erro ao processar o resultado do evento:", error);
+    } finally {
+        if (connection) await connection.close();
     }
-    
-
 }
