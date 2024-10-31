@@ -38,10 +38,16 @@ export async function placeBet(req: Request, res: Response) {
         }
 
         // Verifica se o evento existe.
-        const event = EventsHandler.findEventById(eventId);
-        if (!event) {
+         const eventResult = await connection.execute(
+            'SELECT * FROM Events WHERE id = :eventId', 
+            { eventId }
+        );
+
+        if (eventResult.rows.length === 0) {
             return res.status(400).json({ message: "Evento inválido." });
         }
+
+        const event = eventResult.rows[0]; 
 
         // Obtém o saldo do apostador e verifica se é maior que a taxa mínima.
         const balance = await FinancialHandler.getBalance(email); 
