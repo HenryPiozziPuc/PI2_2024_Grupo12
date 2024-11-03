@@ -26,7 +26,7 @@ import OracleDB, { oracleClientVersion } from "oracledb";
                 res.status(500).send("Erro ao adicionar fundos");
             }
         }};
-
+        
         export const withdrawfunds = async (req: Request, res: Response) =>{
             const pOwnercpf = Number(req.get('cpf'));
             const pValue = Number(req.get('value'));

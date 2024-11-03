@@ -44,6 +44,7 @@ import { DataBaseHandler } from "../DB/connection";
                 await connection.rollback();
                 return (error as Error).message;
             }
+            
             await connection.close();
             return 'Fundo adicionado com sucesso';
         }

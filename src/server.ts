@@ -42,5 +42,6 @@ routes.put('/addFunds', FinancialManager.AddFundsHandler);
 server.use(routes);
 
 server.listen(port, () => {
+    console.clear();
     console.log(`Server is running on: ${port}`);
 })

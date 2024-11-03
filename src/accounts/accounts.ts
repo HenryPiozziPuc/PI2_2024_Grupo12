@@ -148,5 +148,4 @@ export namespace AccountsManager {
             res.send("Parâmetros inválidos ou faltantes.");
         }
     };
-
 }

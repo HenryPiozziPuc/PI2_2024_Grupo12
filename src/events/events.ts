@@ -14,7 +14,7 @@ CREATE TABLE EVENTS(
 );
 */
 
-export namespace EventsHandler {
+export namespace EventsManager {
 
     export type Event = {
         name: string,
