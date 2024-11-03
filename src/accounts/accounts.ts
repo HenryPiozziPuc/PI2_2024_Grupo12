@@ -39,37 +39,40 @@ export namespace AccountsManager {
         const connection = await DataBaseHandler.GetConnection();
 
         try {
+            // Seleciona a senha do banco de dados
             const result = await connection.execute(
                 'SELECT PASSWORD FROM ACCOUNTS WHERE EMAIL = :email',
                 [email]
             );
 
             const rows: string[][] = result.rows as string[][];
-            
+
             if (rows && rows.length > 0) {
                 const storedPassword = rows[0][0]; // Acesso ao primeiro elemento da primeira linha
-                console.log(`A senha encontrada é: ${storedPassword} e a senha digitada foi: ${password}`);
-            
+
+                // Verifica se a senha armazenada corresponde à senha digitada
                 if (storedPassword === password) {
                     const token = await generateToken();
-                    // Atualizando o token no Oracle Cloud
+
+                    // Atualiza o token no banco de dados
                     await connection.execute(
                         'UPDATE ACCOUNTS SET TOKEN = :token WHERE EMAIL = :email',
                         [token, email]
                     );
-                    // Enviando a alteração para o Oracle Cloud e fechando a conexão
+
+                    // Envia a alteração para o banco de dados
                     await connection.commit();
-                    await connection.close();
+                    return { success: true, message: 'Login efetuado com sucesso. Token gerado e inserido na coluna TOKEN da tabela ACCOUNTS.', token };
                 } else {
-                    console.log('Senha incorreta.');
+                    return { success: false, message: 'Senha incorreta.' }; // Mensagem de erro se a senha estiver incorreta
                 }
             } else {
-                console.log('Nenhuma conta encontrada com esse email.');
+                return { success: false, message: 'Nenhuma conta encontrada com esse email.' }; // Mensagem se não houver conta
             }
-            
-
         } catch (error) {
-            console.error('Erro ao realizar login:', error);
+            return { success: false, message: 'Erro ao realizar login. Tente novamente mais tarde.' }; // Mensagem de erro genérica
+        } finally {
+            await connection.close();
         }
     }
 
@@ -79,13 +82,18 @@ export namespace AccountsManager {
         const pPassword = req.get('password');
 
         if (pEmail && pPassword) {
-            const token = await login(pEmail, pPassword);
-            res.statusCode = 200; 
-            res.send('Login efetuado com sucesso, token gerado e inserido na coluna TOKENS da tabela ACCOUNTS.');
-
+            const result = await login(pEmail, pPassword);
+            
+            if (result.success) {
+                res.statusCode = 200;
+                res.send(result.message);
+            } else {
+                res.statusCode = result.message === 'Senha incorreta.' ? 401 : 404;
+                res.send(result.message); 
+            }
         } else {
             res.statusCode = 400;
-            res.send("Parâmetros inválidos ou faltantes.");
+            res.send("Parâmetros inválidos ou faltantes. Por favor, forneça um email e uma senha válidos."); // Mensagem se os parâmetros forem inválidos
         }
     };
     
@@ -134,7 +142,7 @@ export namespace AccountsManager {
                 phoneNumber: pPhoneNumber,
                 birthdate: new Date(pBirthdate),
                 token: undefined,
-                role: 0
+                role: 0 // 0 = user, 1 = admin
             }
     
             await signUp(newAccount);
@@ -148,4 +156,5 @@ export namespace AccountsManager {
             res.send("Parâmetros inválidos ou faltantes.");
         }
     };
+
 }
