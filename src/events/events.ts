@@ -2,18 +2,6 @@ import {Request, RequestHandler, Response} from "express";
 import { DataBaseHandler } from "../DB/connection";
 import OracleDB, { oracleClientVersion } from "oracledb";
 
-/*
-CREATE TABLE EVENTS(
-    ID INTEGER NOT NULL PRIMARY KEY,
-    NAME VARCHAR2(500) NOT NULL,
-    CATEGORY VARCHAR2(50) NOT NULL,
-    FEE INTEGER NOT NULL,
-    START_DATE DATE NOT NULL,
-    END_DATE DATE NOT NULL,
-    APPROVED BOOLEAN NOT NULL DEFAULT FALSE
-);
-*/
-
 export namespace EventsManager {
 
     export type Event = {
@@ -23,7 +11,7 @@ export namespace EventsManager {
         start_date: Date,
         end_date: Date,
         approved: boolean,
-        removed: boolean
+        status_event: boolean
     };
 
     // /addNewEvent

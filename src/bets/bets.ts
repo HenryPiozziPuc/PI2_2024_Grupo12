@@ -1,104 +1,102 @@
-import {Request, RequestHandler, Response} from "express";
+import { Request, RequestHandler, Response } from "express";
 import OracleDB, { getConnection, oracleClientVersion } from "oracledb";
 import { FinancialManager } from "../financial/financial";
 import { EventsManager } from "../events/events";
 import { DataBaseHandler } from "../DB/connection";
 
 export namespace BetsManager {
-    
-        export type Bet = {
-            CPF: string;
-            amount: number
-            eventId: string;
-            option: number;
-        }
-    }
-
-export async function betOnEvent(req: Request, res: Response) {
-   
-    OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-
-        // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
-        let connection = await DataBaseHandler.GetConnection();
-
-    const { CPF, amount, eventId } = req.body;
-    
-    
-
-    const event = EventsManager.findEventById(eventId);
-    if (!event) {
+    export type Bet = {
+      CPF: string;
+      amount: number;
+      eventId: string;
+      option: number;
+    };
+  
+    export async function betOnEvent(req: Request, res: Response) {
+      OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
+  
+      // 1 abrir conexao, 2 fazer selecet, 3 fechar conexao, 4 retornar os dados
+      let connection = await DataBaseHandler.GetConnection();
+  
+      const { CPF, amount, eventId } = req.body;
+  
+      const event = EventsManager.findEventById(eventId);
+      if (!event) {
         return res.status(400).json({ message: "Evento inválido." });
-    }
-
-    if (amount < event.fee) {
-        return res.status(400).json({ 
-            message: "A aposta deve ser maior que a taxa mínima de R${event.fee}." 
+      }
+  
+      if (amount < event.fee) {
+        return res.status(400).json({
+          message: "A aposta deve ser maior que a taxa mínima de R${event.fee}.",
         });
-    }
-
-    const Balance = await FinancialManager.getBalance(CPF);
-    if (Balance < amount) {
+      }
+  
+      const Balance = await FinancialManager.getBalance(CPF);
+      if (Balance < amount) {
         return res.status(400).json({ message: "Saldo insuficiente." });
-    }
-
-
-    try {
+      }
+  
+      try {
         await connection.execute(
-            'INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)',
-            { CPF, eventId, amount },
-            { autoCommit: true }
+          "INSERT INTO Bets (CPF, eventId, amount, option) VALUES (:CPF, :eventId, :amount, :option)",
+          { CPF, eventId, amount },
+          { autoCommit: true }
         );
-
-        const newBalance = await FinancialManager.withdrawfunds (CPF, amount);
-
-        res.status(200).json({ 
-            message: "Aposta registrada!",
-             event: event.name 
+  
+        const newBalance = await FinancialManager.withdrawfunds(CPF, amount);
+  
+        res.status(200).json({
+          message: "Aposta registrada!",
+          event: event.name,
         });
-
-    }   catch (error) {
-            await connection.rollback();
-            res.status(500).json({ 
-                message: "Erro ao registrar a aposta." 
+      } catch (error) {
+        await connection.rollback();
+        res.status(500).json({
+          message: "Erro ao registrar a aposta.",
         });
-    } 
-    finally {
+      } finally {
         await connection.close();
-    }
-
-    if (event.statusEvent === option) { 
+      }
+  
+      if (event.statusEvent === option) {
         const winningBets = await connection.execute(
-            'SELECT CPF, amount FROM Bets WHERE eventId = :eventId AND option = :option',
-            { eventId: eventId, option: event.statusEvent } 
+          "SELECT CPF, amount FROM Bets WHERE eventId = :eventId AND option = :option",
+          { eventId: eventId, option: event.statusEvent }
         );
-    
+  
         const losingBets = await connection.execute(
-            'SELECT amount FROM Bets WHERE eventId = :eventId AND option != :option',
-            { eventId: eventId, option: event.statusEvent } 
+          "SELECT amount FROM Bets WHERE eventId = :eventId AND option != :option",
+          { eventId: eventId, option: event.statusEvent }
         );
-    
-        
-        const totalWinningAmount = winningBets.rows.reduce((total, bet) => total + bet.amount, 0);
-        const totalLosingAmount = losingBets.rows.reduce((total, bet) => total + bet.amount, 0);
-    
+  
+        const totalWinningAmount = winningBets.rows.reduce(
+          (total, bet) => total + bet.amount,
+          0
+        );
+        const totalLosingAmount = losingBets.rows.reduce(
+          (total, bet) => total + bet.amount,
+          0
+        );
+  
         for (const bet of winningBets.rows) {
-            const proportionalWinnings = bet.amount + (bet.amount / totalWinningAmount) * totalLosingAmount;
-    
-            await FinancialManager.addFunds(bet.CPF, proportionalWinnings);
-    
-            if (bet.CPF === CPF) {
-                res.status(200).json({
-                    message: "Você ganhou a aposta!",
-                    winnings: proportionalWinnings,
-                    finalBalance: Balance + proportionalWinnings
-                });
-            }
+          const proportionalWinnings =
+            bet.amount + (bet.amount / totalWinningAmount) * totalLosingAmount;
+  
+          await FinancialManager.addFunds(bet.CPF, proportionalWinnings);
+  
+          if (bet.CPF === CPF) {
+            res.status(200).json({
+              message: "Você ganhou a aposta!",
+              winnings: proportionalWinnings,
+              finalBalance: Balance + proportionalWinnings,
+            });
+          }
         }
-    } else {
-        res.status(200).json({ 
-            message: "Você perdeu a aposta." 
+      } else {
+        res.status(200).json({
+          message: "Você perdeu a aposta.",
         });
+      }
     }
-    
-
-}
+  }
+  
