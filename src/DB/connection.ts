@@ -1,11 +1,10 @@
 import * as OracleDB from "oracledb";
 import * as dotenv from "dotenv";
-import fs from 'fs';
+import fs from 'fs'; // import para ler o arquivo dump.sql
 dotenv.config();
 
 
 export namespace DataBaseHandler {
-
     // Fazer a conexão com o Oracle Cloud
     export async function GetConnection() {
         const connection = await OracleDB.getConnection({
@@ -127,9 +126,6 @@ export namespace DataBaseHandler {
         } finally {
             await connection.close();
         }
-    } */
-
-
-   
+    } */   
 
 }

@@ -45,6 +45,8 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
             } catch (error) {
                 await connection.rollback();
                 return (error as Error).message;
+            } finally {
+                await connection.close();
             }
             
             await connection.close();
