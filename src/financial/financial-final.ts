@@ -19,8 +19,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
         /* addFunds Funcionando */
         async function addFunds(wallet: AddFundsParams) {
 
-            
-
             const connection = await DataBaseHandler.GetConnection();
             try {
                 const balanceResult = await connection.execute(
@@ -56,7 +54,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
         /* addFundsHandler Funcionando */
         export const AddFundsHandler: RequestHandler = async (req: Request, res: Response) => {
 
-            
             if (await AuthenticateTokenManager.AuthenticateTokenHandler(req, res)) {
                 return; 
             }
