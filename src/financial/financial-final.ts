@@ -75,9 +75,7 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                     cvv: pCvv
                 }
 
-                const addFundsReturn = await addFunds(addFundsParams);
-                
-                res.status(200).send(addFundsReturn);
+                res.status(200).send(await addFunds(addFundsParams));
 
             } else {
                 res.status(400).send("Todas as informações devem ser fornecidas.");

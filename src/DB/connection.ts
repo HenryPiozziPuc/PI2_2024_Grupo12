@@ -17,6 +17,7 @@ export namespace DataBaseHandler {
         return connection;
     }
 
+    /*
     // Testar a conexão com o Oracle Cloud importando o Dump
     export async function runDatabaseTests() {
         const connection = await GetConnection();
@@ -37,8 +38,7 @@ export namespace DataBaseHandler {
         await connection.close();
     }
     
-
-    /* export async function testInsertion() {
+     export async function testInsertion() {
         const connection = await GetConnection();
         try {
             // Verificando se o CPF já existe na tabela ACCOUNTS
