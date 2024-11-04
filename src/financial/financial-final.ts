@@ -1,6 +1,7 @@
 import {Request, RequestHandler, Response} from "express";
 import OracleDB, { oracleClientVersion } from "oracledb";
 import { DataBaseHandler } from "../DB/connection";
+import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
 /* Nampespace que contém tudo sobre "contas de usuários" */
     export namespace FinancialManager{
@@ -17,6 +18,9 @@ import { DataBaseHandler } from "../DB/connection";
 
         /* addFunds Funcionando */
         async function addFunds(wallet: AddFundsParams) {
+
+            
+
             const connection = await DataBaseHandler.GetConnection();
             try {
                 const balanceResult = await connection.execute(
@@ -31,7 +35,7 @@ import { DataBaseHandler } from "../DB/connection";
                     const balance =  Number(rows[0]);
                     newBalance = balance + wallet.amountAdd;
                 } else {
-                    return 'Carteira não encontrada'
+                    return 'Carteira não encontrada, tente novamente.'
                 }
     
                 await connection.execute(
@@ -51,6 +55,12 @@ import { DataBaseHandler } from "../DB/connection";
         
         /* addFundsHandler Funcionando */
         export const AddFundsHandler: RequestHandler = async (req: Request, res: Response) => {
+
+            
+            if (await AuthenticateTokenManager.AuthenticateTokenHandler(req, res)) {
+                return; 
+            }
+
             const pOwnerCPF = parseInt(req.get('CPF') || '', 10);
             const pAmountAdd = parseFloat(req.get('amountAdd') || '0');
             const pPaymentMethod = req.get('paymentMethod');
