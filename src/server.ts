@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express";
 import { AccountsManager } from "./accounts/accounts";
 import { BetsManager } from "./bets/bets";
 import { EventsManager } from "./events/events";
-import { FinancialManager } from "./financial/financial-final";
+import { FinancialManager } from "./financial/financial";
 import { DataBaseHandler } from './DB/connection';
 import cookieParser from 'cookie-parser'; // Importar cookie-parser
 
@@ -46,7 +46,7 @@ routes.put('/signUp', AccountsManager.SignUpHandler);
 
 // Financial
 routes.put('/addFunds', FinancialManager.AddFundsHandler);
-// routes.put('/withdrawFunds', FinancialManager.withdrawFundsHandler);
+routes.put('/withdrawFunds', FinancialManager.withdrawFundsHandler);
 
 server.use(routes);
 

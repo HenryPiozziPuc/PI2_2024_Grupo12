@@ -10,134 +10,165 @@ export namespace EventsManager {
         fee: number,
         start_date: Date,
         end_date: Date,
-        approved: boolean,
-        status_event: boolean
+        approved: number,
+        status_event: number,
+        creator_tokken: number
     };
 
-    // /addNewEvent
-    export const addNewEvent: RequestHandler = async (req: Request, res: Response) => {
-        const { name, category, fee, startDate, endDate } = req.body;
-    
-        if (!name || !category || !fee || !startDate || !endDate) {
-            res.status(400).json({ message: "Parâmetros de evento inválidos." });
-            return;  // Agora estamos usando `return` para encerrar a função após enviar a resposta
-        }
-    
-        // Convertendo variáveis para tipos corretos e validando datas
-        const parsedFee = Number(fee);
-        const parsedStartDate = new Date(startDate);
-        const parsedEndDate = new Date(endDate);
-    
-        if (isNaN(parsedFee) || isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-            res.status(400).json({ message: "Parâmetros de evento com tipos inválidos." });
-            return;
-        }
-    
+    async function createEvent(event: Event) {
         const connection = await DataBaseHandler.GetConnection();
+
         try {
-            
             await connection.execute(
-                `INSERT INTO EVENTS (NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, REMOVED) 
-                 VALUES (:name, :category, :fee, :startDate, :endDate, :approved, :removed)`,
-                {
-                    name,
-                    category,
-                    fee: parsedFee,
-                    startDate: parsedStartDate,
-                    endDate: parsedEndDate,
-                    approved: 0,   // false como 0
-                    removed: 0     // false como 0
-                },
-                { autoCommit: true }
+                'INSERT INTO EVENTS (NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CREATOR_TOKKEN) VALUES(:name,:category,:fee,:start_date,:end_date,:approved,:status_event,:creator_tokken)',
+                [event.name, event.category, event.fee, event.start_date, event.end_date, event.approved, event.status_event, event.creator_tokken]
             );
-    
-            res.status(201).json({ message: `Evento "${name}" criado com sucesso e aguardando aprovação.` });
+            await connection.commit();
+            return { success: true, message: 'Evento criado com sucesso.' };
         } catch (error) {
-            console.error("Erro ao criar evento:", error);
-            res.status(500).json({ message: "Erro ao criar evento.", error });
+            return { success: false, message: 'Erro ao criar evento. Tente novamente mais tarde.' }
         } finally {
-            if (connection) await connection.close();
+            await connection.close();
         }
     }
 
-    // /getEvents
-    export const getEvents: RequestHandler = async (req, res) => {
-        const { status } = req.query;
-        let query = "SELECT * FROM EVENTS WHERE REMOVED = 0";
-        if (status === "approved") query += " AND APPROVED = 1";
-        else if (status === "pending") query += " AND APPROVED = 0";
+    export const createEventHandler: RequestHandler = async (req: Request, res: Response) =>{
+        const pName = req.get('name');
+        const pCategory = req.get('category');
+        const pFee = parseInt(req.get('fee') || '');
+        const pStart_date = req.get('start_date');
+        const pEnd_date = req.get('end_date');
+        const pApproved = parseInt(req.get('approved') || '');
+        const pCreator_tokken = parseInt(req.get('creator_tokken') || '');
 
-        const connection = await DataBaseHandler.GetConnection();
-        try {
-            const result = await connection.execute(query);
-            res.status(200).json(result.rows);
-        } catch (error) {
-            console.error("Erro ao obter eventos:", error);
-            res.status(500).json({ message: "Erro ao obter eventos.", error });
-        } finally {
-            if (connection) await connection.close();
+        if(pName && pCategory && !isNaN(pFee) && pStart_date && pEnd_date && !isNaN(pApproved) && !isNaN(pCreator_tokken)){
+            const newEvent: Event = {
+                name: pName,
+                category: pCategory,
+                fee: pFee,
+                start_date: new Date(pStart_date),
+                end_date: new Date (pEnd_date),
+                approved: pApproved,
+                status_event: 1,
+                creator_tokken: pCreator_tokken
+            }
+
+            const result = await createEvent(newEvent);
+
+            if(result.success){
+                res.status(200).send(result.message);
+            }else{
+                res.status(400).send(result.message);
+            }
+        }else{
+            res.status(400);
         }
     }
 
-    // /deleteEvent
-    export const deleteEvent: RequestHandler = async (req: Request, res: Response) => {
-        const eventId = parseInt(req.params.id);
-    
-        if (isNaN(eventId)) {
-            res.status(400).json({ message: "ID inválido." });
-            return;
-        }
-    
+    async function updateEventStatus(eventId: number, newStatus: number) {
         const connection = await DataBaseHandler.GetConnection();
+
         try {
             const result = await connection.execute(
-                `UPDATE EVENTS SET REMOVED = 1 WHERE ID = :id AND APPROVED = 0`,
-                { id: eventId },
-                { autoCommit: true }
+                'UPDATE EVENTS SET STATUS_EVENT = :newStatus WHERE ID = :eventId',
+                { newStatus, eventId }
             );
-    
-            if (result.rowsAffected) {
-                res.status(200).json({ message: `Evento com ID ${eventId} marcado como removido.` });
+
+            await connection.commit();
+
+            // Verifica se alguma linha foi afetada
+            if (result.rowsAffected && result.rowsAffected > 0) {
+                return { success: true, message: 'Status do evento atualizado com sucesso.' };
             } else {
-                res.status(404).json({ message: `Evento com ID ${eventId} não encontrado ou já aprovado.` });
+                return { success: false, message: 'Evento não encontrado.' };
             }
         } catch (error) {
-            console.error("Erro ao remover evento:", error);
-            res.status(500).json({ message: "Erro ao remover evento.", error });
+            console.error(error);
+            return { success: false, message: 'Erro ao atualizar o status do evento.' };
         } finally {
-            if (connection) await connection.close();
+            await connection.close();
         }
     }
 
-    // Avaliação de evento (aprovação ou rejeição) /evaluateNewEvent
-    export const evaluateNewEvent: RequestHandler = async (req, res) => {
-        const eventId = parseInt(req.params.id);
-        const { approved } = req.body;
+    export const updateEventStatusHandler: RequestHandler = async (req: Request, res: Response) => {
+        const eventId = parseInt(req.params.eventId);
 
-        if (isNaN(eventId) || approved === undefined) {
-            res.status(400).json({ message: "Parâmetros de avaliação inválidos." });
-            return;
+        if (!isNaN(eventId)) {
+            const result = await updateEventStatus(eventId, 0);
+
+            if (result.success) {
+                res.status(200).send(result.message);
+            } else {
+                res.status(404).send(result.message);
+            }
+        } else {
+            res.status(400).send('ID do evento e novo status são obrigatórios e devem ser números.');
         }
+    };
 
+    type EventRow = [string, string, number, Date, Date, number, number, number];
+
+    async function getFilteredEvents(filter: string) {
         const connection = await DataBaseHandler.GetConnection();
-        try {
-            const result = await connection.execute(
-                `UPDATE EVENTS SET APPROVED = :approved WHERE ID = :id`,
-                { approved: approved ? 1 : 0, id: eventId },
-                { autoCommit: true }
-            );
 
-            if (result.rowsAffected) {
-                const status = approved ? "aprovado" : "rejeitado";
-                res.status(200).json({ message: `Evento com ID ${eventId} foi ${status}.` });
-            } else {
-                res.status(404).json({ message: `Evento com ID ${eventId} não encontrado.` });
+        try {
+            let query = 'SELECT NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CREATOR_TOKKEN FROM EVENTS';
+            let conditions: string[] = [];
+            let parameters: Record<string, any> = {};
+
+            switch (filter) {
+                case 'aguardando_aprovacao':
+                    conditions.push('APPROVED = 0');
+                    break;
+                case 'ja_ocorridos':
+                    conditions.push('END_DATE < SYSDATE');
+                    break;
+                case 'futuros':
+                    conditions.push('START_DATE > SYSDATE');
+                    break;
+                default:
+                    throw new Error('Filtro inválido.');
             }
+
+            if (conditions.length > 0) {
+                query += ' WHERE ' + conditions.join(' AND ');
+            }
+
+            const result = await connection.execute<EventRow[]>(query, parameters);
+
+            const events = result.rows?.map(row => ({
+                name: row[0],
+                category: row[1],
+                fee: row[2],
+                start_date: row[3],
+                end_date: row[4],
+                approved: row[5],
+                status_event: row[6],
+                creator_tokken: row[7]
+            })) || [];
+
+            return { success: true, events };
         } catch (error) {
-            console.error("Erro ao avaliar evento:", error);
-            res.status(500).json({ message: "Erro ao avaliar evento.", error });
+            console.error(error);
+            return { success: false, message: 'Erro ao buscar eventos.' };
         } finally {
-            if (connection) await connection.close();
+            await connection.close();
         }
     }
+
+    export const getEventsHandler: RequestHandler = async (req: Request, res: Response) => {
+        const filter = req.query.filter as string;
+
+        try {
+            const result = await getFilteredEvents(filter);
+
+            if (result.success) {
+                res.status(200).json(result.events);
+            } else {
+                res.status(400).send(result.message);
+            }
+        } catch (error) {
+            res.status(400).send("Erro");
+        }
+    };
 }

@@ -29,9 +29,7 @@ export namespace AuthenticateTokenManager {
         } catch (error) {
             console.error('Erro ao autenticar o token:', error);
             return res.status(500).send('Falha ao autenticar o token');
-        } finally {
-            await connection.close();
-        }
+        } 
     }
 
 }

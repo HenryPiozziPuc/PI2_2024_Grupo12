@@ -92,13 +92,13 @@ export namespace AccountsManager {
                 res.cookie('authToken', result.token, {
                     httpOnly: true, // O cookie não pode ser acessado pelo JavaScript no lado do cliente
                     secure: false, // Somente HTTPS (ou true se você estiver em produção)
-                    maxAge: 10000  // 10 Segundos | 1 hora = 3600000  
+                    maxAge: 3600000  // 10 Segundos | 1 hora = 3600000  
                 });
 
                 res.cookie('userRole', result.role, {
                     httpOnly: true, // O cookie não pode ser acessado pelo JavaScript no lado do cliente
                     secure: false, // Somente HTTPS (ou true se você estiver em produção)
-                    maxAge: 10000  // 10 Segundos | 1 hora = 3600000 
+                    maxAge: 3600000  // 10 Segundos | 1 hora = 3600000 
                 });
 
                 res.status(200).send(result.message);

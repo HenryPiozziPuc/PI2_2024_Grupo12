@@ -1,111 +1,204 @@
 import {Request, RequestHandler, Response} from "express";
 import OracleDB, { oracleClientVersion } from "oracledb";
+import { DataBaseHandler } from "../DB/connection";
+import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
 /* Nampespace que contém tudo sobre "contas de usuários" */
     export namespace FinancialManager{
-        
-        export type Wallet = {
-            pOwnercpf : number;
-            balance: number;
+
+        /* AddFundsParams type */
+        type AddFundsParams = {
+            ownerCPF: number | undefined;
+            amountAdd: number;
+            paymentMethod: string;
+            cardNumber: string;
+            expiryDate: string;
+            cvv: string;
         }
-
-        const wallets: Wallet[] = [];
-
-        export const addfunds =async (req: Request, res: Response) =>{
-            const pOwnercpf = Number(req.get('cpf'));
-            const pValue = Number(req.get('value'));
-            if (!pOwnercpf || !pValue) {
-                return res.status(400).send("CPF e valor são obrigatórios");
-            }
-            else{
-            try {
-                await AddingFunds(pOwnercpf, pValue);
-                res.send("Fundos adicionados com sucesso!");
-            } catch (error) {
-                console.error("Erro ao adicionar fundos:", error);
-                res.status(500).send("Erro ao adicionar fundos");
-            }
-        }};
         
-        export const withdrawfunds = async (req: Request, res: Response) =>{
-            const pOwnercpf = Number(req.get('cpf'));
-            const pValue = Number(req.get('value'));
-            if (!pOwnercpf || !pValue) {
-                return res.status(400).send("CPF e valor são obrigatórios");
-            }else{
-            try {
-                await gettingFunds(pOwnercpf, pValue);
-                res.send("Fundos retirados com sucesso!");
-            } catch (error) {
-                console.error("Erro ao retirar fundos:", error);
-                res.status(500).send("Erro ao adicionar fundos");
-            }
-        }};
-        function findWallet(cpf: number): Wallet | undefined {
-            return wallets.find(wallet => wallet.pOwnercpf === cpf);
+        type WithdrawFundsParams = {
+            ownerCPF: number | undefined;
+            amountWithdraw: number;
+            withdrawMethod:string;
+            bank: string | undefined;
+            agency: number | undefined;
+            accountNumber: number | undefined;
+            pixKey: string | undefined;
         }
-        async function AddingFunds(pOwnercpf: number,value: number){
-            OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-            let connection = await OracleDB.getConnection({
-                user: process.env.ORACLE_USER,
-                password: process.env.ORACLE_PASSWORD,
-                connectString:process.env.ORACLE_CONN_STR
-            });
+        
+        /* addFunds Funcionando */
+        async function addFunds(wallet: AddFundsParams) {
 
-            let wallet = findWallet(pOwnercpf);
+            const connection = await DataBaseHandler.GetConnection();
             
-            if (!wallet) {
-                wallet = { pOwnercpf: pOwnercpf, balance: 0 };
-                wallets.push(wallet);
-
             try {
-                const newbalance = wallet.balance += value;
-                const result = await connection.execute(
-                    `UPDATE WALLET SET BALANCE = balance WHERE CPF =:`,
-                    {cpf:pOwnercpf},
-                    {balance:newbalance}
-                )
-        }
-        catch(error){
-            console.error(error);
-        }
-        }
-    }
-        async function gettingFunds(pOwnercpf:number,value:number){
-            OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-            let connection = await OracleDB.getConnection({
-                user: process.env.ORACLE_USER,
-                password: process.env.ORACLE_PASSWORD,
-                connectString:process.env.ORACLE_CONN_STR
-            });
-            let wallet = findWallet(pOwnercpf);
-            if (!wallet) {
-                return Response.status(404).send("Carteira não encontrada");
-            }
-            try {
-                if (wallet.balance < value ) {
-                    Response.send("Valor de retirada maior do que o saldo disponível");
-                    return;
-                }
-    
-                if (value <= 100) {
-                    value *= 1 - (4 / 100);
-                } else if (value > 100 && value <= 1000) {
-                    value *= 1 - (3 / 100);
-                } else if (value > 1000 && value <= 5000) {
-                    value *= 1 - (2 / 100);
-                } else if (value > 5000 && value <= 100000) {
-                    value *= 1 - (1 / 100);
-                }
-    
-                const newbalance = wallet.balance -= value;
-                await connection.execute(
-                    `UPDATE WALLET SET BALANCE = :balance WHERE CPF = :cpf`,
-                    { cpf: pOwnercpf, balance: newbalance }
+                const balanceResult = await connection.execute(
+                    'SELECT BALANCE FROM WALLET WHERE CPF = :cpf',
+                    [wallet.ownerCPF]
                 );
-                Response.send("Saque realizado com sucesso!");
+    
+                const rows: any[][] = balanceResult.rows as any[][];
+                let newBalance = 0;
+    
+                if (rows.length > 0) {
+                    const balance =  Number(rows[0][0]);
+                    newBalance = balance + wallet.amountAdd;
+                } else {
+                    return 'Carteira não encontrada, tente novamente.'
+                }
+    
+                await connection.execute(
+                    'UPDATE WALLET SET BALANCE = :newBalance WHERE CPF = :cpf',
+                    [newBalance, wallet.ownerCPF]
+                );
+
+                await connection.commit();
             } catch (error) {
-                console.error(error);
-                    }
+                await connection.rollback();
+                return (error as Error).message;
+            } finally {
+                await connection.close();
             }
-        }
+            
+            return 'Fundo adicionado com sucesso';
+        };
+        
+        /* addFundsHandler Funcionando */
+        export const AddFundsHandler: RequestHandler = async (req: Request, res: Response) => {
+
+            if (await AuthenticateTokenManager.AuthenticateTokenHandler(req, res)) {
+                return; 
+            }
+
+            const pOwnerCPF = parseInt(req.get('CPF') || '', 10);
+            const pAmountAdd = parseFloat(req.get('amountAdd') || '0');
+            const pPaymentMethod = req.get('paymentMethod');
+            const pCardNumber = req.get('cardNumber');
+            const pExpiryDate = req.get('expiryDate');
+            const pCvv = req.get('cvv');
+
+            if (pOwnerCPF && pAmountAdd && pPaymentMethod && pCardNumber && pExpiryDate && pCvv) {
+                const addFundsParams: AddFundsParams = {
+                    ownerCPF: pOwnerCPF,
+                    amountAdd: pAmountAdd,
+                    paymentMethod: pPaymentMethod,
+                    cardNumber: pCardNumber,
+                    expiryDate: pExpiryDate,
+                    cvv: pCvv
+                }
+
+                res.status(200).send(await addFunds(addFundsParams));
+
+            } else {
+                res.status(400).send("Todas as informações devem ser fornecidas.");
+            }
+        };
+        
+        /* withdrawFunds Funcionando */
+        async function withdrawFunds(wallet: WithdrawFundsParams) {
+            const connection = await DataBaseHandler.GetConnection();
+            try {
+                const balanceResult = await connection.execute(
+                    'SELECT BALANCE FROM WALLET WHERE CPF = :cpf',
+                    [wallet.ownerCPF]
+                );
+    
+                const rows: any[][] = balanceResult.rows as any[][];
+                
+                let newBalance = 0;
+    
+                if (rows.length > 0) {
+
+                    // Verificando o valor do amountWithdraw
+                    if (wallet.amountWithdraw <= 0) {
+                        return 'Valor inválido, digite um valor maior que 0.';
+                    }
+
+                    // Verificando a WalletBalance e o amountWithdraw
+                    if (wallet.amountWithdraw > rows[0][0]) {
+                        return 'Saldo insuficiente, tente novamente.';
+                    }
+                    const balance =  Number(rows[0][0]);
+                    console.log(balance); // debug temporario
+                    newBalance = balance - wallet.amountWithdraw;
+                } else {
+                    return 'Carteira não encontrada, tente novamente.'
+                }
+    
+                await connection.execute(
+                    'UPDATE WALLET SET BALANCE = :newBalance WHERE CPF = :cpf',
+                    [newBalance, wallet.ownerCPF]
+                );
+
+                await connection.commit();
+
+                return `Saldo retirado com sucesso! Seu novo saldo é ${newBalance}`;
+
+            } catch (error) {
+                await connection.rollback();
+                return (error as Error).message;
+            } finally {
+                await connection.close();
+            }
+            
+            
+        };
+
+        /* withdrawFundsHandler Funcionando */
+        export const withdrawFundsHandler: RequestHandler = async (req: Request, res: Response) => {
+
+            if (await AuthenticateTokenManager.AuthenticateTokenHandler(req, res)) {
+                return;
+            }
+
+            let pBank, pAgency, pAccountNumber, pPixKey;
+
+            const pOwnerCPF = parseInt(req.get('CPF') || '', 10);
+            const pAmountWithdraw = parseFloat(req.get('AmountWithdraw') || '0');
+            const pWithdrawMethod = req.get('paymentMethod');
+            
+            if (!pWithdrawMethod) {
+                res.status(400).send("Withdraw Method is required.");
+                return;
+            }
+
+            if (pWithdrawMethod === 'accountBank') {
+                pBank = req.get('bank');
+                pAgency = Number(req.get('agency'));
+                pAccountNumber = Number(req.get('accountNumber'));
+            } else if (pWithdrawMethod === 'pix') {
+                pPixKey = req.get('pixKey');
+            } else {
+                res.status(400).send("Withdraw Method is invalid.");
+                return;
+            }
+
+            if (pOwnerCPF && pAmountWithdraw && pWithdrawMethod && pBank && pAgency && pAccountNumber) {
+                const withdrawFundsParams: WithdrawFundsParams = {
+                    ownerCPF: pOwnerCPF,
+                    amountWithdraw: pAmountWithdraw,
+                    withdrawMethod: pWithdrawMethod,
+                    bank: pBank,
+                    agency: pAgency,
+                    accountNumber: pAccountNumber,
+                    pixKey: undefined
+                };
+                const result = await withdrawFunds(withdrawFundsParams);
+                res.status(200).send(result);
+            } else if (pOwnerCPF && pAmountWithdraw && pWithdrawMethod && pPixKey) {
+                const withdrawFundsParams: WithdrawFundsParams = {
+                    ownerCPF: pOwnerCPF,
+                    amountWithdraw: pAmountWithdraw,
+                    withdrawMethod: pWithdrawMethod,
+                    bank: undefined,
+                    agency: undefined,
+                    accountNumber: undefined,
+                    pixKey: pPixKey
+                };
+                const result = await withdrawFunds(withdrawFundsParams);
+                res.status(200).send(result);
+            } else {
+                res.status(400).send("All required information must be provided.");
+            }
+        };
+    }
