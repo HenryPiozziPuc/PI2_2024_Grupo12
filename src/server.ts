@@ -39,10 +39,10 @@ routes.put('/signUp', AccountsManager.SignUpHandler);
 // routes.get('/searchEvent', BetsManager.searchEvent);
 
 // Events
-routes.put('/addNewEvent', EventsManager.addNewEvent);
-routes.get('/getEvents', EventsManager.getEvents);
-routes.delete('/deleteEvent', EventsManager.deleteEvent);
-routes.post('/evaluateNewEvent', EventsManager.evaluateNewEvent);
+routes.put('/addNewEvent', EventsManager.addNewEventHandler);
+routes.get('/getEvents', EventsManager.getEventsHandler);
+routes.put ('/deleteEvent', EventsManager.updateEventStatusHandler);
+routes.post('/evaluateNewEvent', EventsManager.evaluateEventHandler);
 
 // Financial
 routes.put('/addFunds', FinancialManager.AddFundsHandler);

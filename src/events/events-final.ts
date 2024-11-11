@@ -119,7 +119,6 @@ export namespace EventsManager {
     }
 
     /* getEventsHandler Funcionando */
-
     export const getEventsHandler: RequestHandler = async (req: Request, res: Response) => {
         const filter = req.get('filter');
 
@@ -184,18 +183,19 @@ export namespace EventsManager {
 
     async function sendRejectionEmail(to: string) {
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false,
             auth: {
-                user: process.env.EMAIL_USER, 
-                pass: process.env.EMAIL_PASSWORD 
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD
             }
         });
-
         
     
         const mailOptions = {
             from: process.env.EMAIL_USER,
-            to: to,
+            to,
             subject: 'Evento Reprovado',
             text: `Infelizmente, o seu evento foi reprovado. Entre em contato para mais informações.`
         };
@@ -205,10 +205,12 @@ export namespace EventsManager {
             console.log(`E-mail de reprovação enviado para: ${to}`);
         } catch (error) {
             console.error("Erro ao enviar e-mail:", error);
+        } finally {
+            await transporter.close();
         }
     }
     
-    async function evaluateNewEvent(eventId: number, approve: string) {
+    async function evaluateNewEvent(eventId: number, approve: boolean) {
         const connection = await DataBaseHandler.GetConnection();
     
         try {
@@ -217,7 +219,7 @@ export namespace EventsManager {
                 'UPDATE EVENTS SET APPROVED = :approved WHERE ID = :eventId',
                 [approvedStatus, eventId]
             );
-            
+    
             await connection.commit();
     
             if (!approvedStatus) {
@@ -233,7 +235,7 @@ export namespace EventsManager {
                     const creator_CPF = eventResult.rows[0];
     
                     const EmailResult = await connection.execute(
-                        'SELECT EMAIL FROM ACCOUNTS WHERE CPF = :creator_CPF',
+                        'SELECT EMAIL FROM ACCOUNTS WHERE TOKKEN = :creator_CPF',
                         [creator_CPF]
                     );
     
@@ -261,26 +263,32 @@ export namespace EventsManager {
     }
     
     export const evaluateEventHandler = async (req: Request, res: Response) => {
-        const eID = Number(req.get('eventID'));
-        const pApprove = req.get('approve');
+        const { eventId, approve } = req.body;
+    
+        const connection = await DataBaseHandler.GetConnection();
 
-        if (pApprove !== '0' && pApprove !== '1') {
-            res.status(400).send("Parâmetros inválidos. Digite 1 ou 0 para aprovar ou rejeitar o evento.");
-        }
-
-        if (eID && pApprove) {
-            const evaluationResult = await evaluateNewEvent(eID, pApprove);
-
-            if (evaluationResult.success) {
-                res.status(200).send(evaluationResult.message);
+        try {
+            const result = await connection.execute('SELECT * FROM EVENTS WHERE ID = :eventId', [eventId]);
+            // Verifica se `result.rows` existe e possui pelo menos uma linha
+            if (result.rows && result.rows.length > 0) {
+                const event = result.rows[0];
+    
+                const evaluationResult = await evaluateNewEvent(eventId, approve);
+    
+                if (evaluationResult.success) {
+                    res.status(200).send(evaluationResult.message);
+                } else {
+                    res.status(500).send(evaluationResult.message);
+                }
             } else {
-                res.status(500).send(evaluationResult.message);
+                res.status(404).send('Evento não encontrado');
             }
-        } else {
-            res.status(400).send("Parâmetros inválidos ou faltantes.");
+        } catch (error) {
+            console.error("Erro ao buscar evento:", error);
+            res.status(500).send("Erro interno ao buscar evento.");
+        } finally {
+            await connection.close();
         }
-        
-
     };
 
 }

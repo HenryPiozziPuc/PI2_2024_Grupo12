@@ -111,8 +111,6 @@ export namespace AccountsManager {
         }
     };
 
-
-
     /* createWallet Funcionando */
     async function createWallet(account: UserAccount) {
         const connection = await DataBaseHandler.GetConnection();
