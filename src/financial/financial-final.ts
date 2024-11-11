@@ -96,7 +96,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
         
         
         async function withdrawFunds(wallet: WithdrawFundsParams) {
-            
             const connection = await DataBaseHandler.GetConnection();
             try {
                 const balanceResult = await connection.execute(
@@ -140,7 +139,7 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
             let pBank, pAgency, pAccountNumber, pPixKey;
 
             const pOwnerCPF = parseInt(req.get('CPF') || '', 10);
-            const pAmountwithdraw = parseFloat(req.get('amountwithdraw') || '0');
+            const pAmountWithdraw = parseFloat(req.get('amountwithdraw') || '0');
             const pWithdrawtMethod = req.get('paymentMethod');
             
             if (pWithdrawtMethod === 'accountBank') {
@@ -154,10 +153,10 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
             }
            
 
-            if (pOwnerCPF && pAmountwithdraw && pWithdrawtMethod && pBank && pAgency && pAccountNumber) {
+            if (pOwnerCPF && pAmountWithdraw && pWithdrawtMethod && pBank && pAgency && pAccountNumber) {
                 const withdrawFundsParams: WithdrawFundsParams = {
                     ownerCPF: pOwnerCPF,
-                    amountWithdraw: pAmountwithdraw,
+                    amountWithdraw: pAmountWithdraw,
                     withdrawMethod: pWithdrawtMethod,
                     bank: pBank,
                     agency: pAgency,
@@ -167,17 +166,17 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
                 res.status(200).send(await withdrawFunds(withdrawFundsParams)); 
 
-            } else if (pOwnerCPF && pAmountwithdraw && pWithdrawtMethod && pPixKey) {
+            } else if (pOwnerCPF && pAmountWithdraw && pWithdrawtMethod && pPixKey) {
                 const withdrawFundsParams: WithdrawFundsParams = {
                     ownerCPF: pOwnerCPF,
-                    amountWithdraw: pAmountwithdraw,
+                    amountWithdraw: pAmountWithdraw,
                     withdrawMethod: pWithdrawtMethod,
                     bank: undefined, // Se a escolha for pixKey, Bank, Agency e accountNumber devem ser undefined
                     agency: undefined, // Se a escolha for pixKey, Bank, Agency e accountNumber devem ser undefined
                     accountNumber: undefined, // Se a escolha for pixKey, Bank, Agency e accountNumber devem ser undefined
                     pixKey: pPixKey
                 }
-                
+
                 res.status(200).send(await withdrawFunds(withdrawFundsParams));
                 
             } else {
