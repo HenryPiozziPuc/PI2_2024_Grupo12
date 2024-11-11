@@ -23,7 +23,7 @@ declare global {
     }
 }
 
-// A rota tem um verbo/método http (GET, POST, PUT, DELETE)
+// Rota Default
 routes.get('/', (req: Request, res: Response) => {
     res.statusCode = 403;
     res.send('Acesso não permitido.');
@@ -39,10 +39,10 @@ routes.put('/signUp', AccountsManager.SignUpHandler);
 // routes.get('/searchEvent', BetsManager.searchEvent);
 
 // Events
-// routes.put('/addNewEvent', EventsManager.addNewEvent);
-// routes.get('/getEvents', EventsManager.getEvents);
-// routes.delete('/deleteEvent', EventsManager.deleteEvent);
-// routes.post('/evaluateNewEvent', EventsManager.evaluateNewEvent);
+routes.put('/addNewEvent', EventsManager.addNewEvent);
+routes.get('/getEvents', EventsManager.getEvents);
+routes.delete('/deleteEvent', EventsManager.deleteEvent);
+routes.post('/evaluateNewEvent', EventsManager.evaluateNewEvent);
 
 // Financial
 routes.put('/addFunds', FinancialManager.AddFundsHandler);

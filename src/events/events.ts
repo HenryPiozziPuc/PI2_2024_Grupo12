@@ -1,7 +1,7 @@
 import {Request, RequestHandler, Response} from "express";
 import { DataBaseHandler } from "../DB/connection";
 import OracleDB, { oracleClientVersion } from "oracledb";
-
+import nodemailer from 'nodemailer';
 export namespace EventsManager {
 
     export type Event = {
@@ -38,17 +38,16 @@ export namespace EventsManager {
         const pFee = parseInt(req.get('fee') || '');
         const pStart_date = req.get('start_date');
         const pEnd_date = req.get('end_date');
-        const pApproved = parseInt(req.get('approved') || '');
         const pCreator_tokken = parseInt(req.get('creator_tokken') || '');
 
-        if(pName && pCategory && !isNaN(pFee) && pStart_date && pEnd_date && !isNaN(pApproved) && !isNaN(pCreator_tokken)){
+        if(pName && pCategory && !isNaN(pFee) && pStart_date && pEnd_date && !isNaN(pCreator_tokken)){
             const newEvent: Event = {
                 name: pName,
                 category: pCategory,
                 fee: pFee,
                 start_date: new Date(pStart_date),
                 end_date: new Date (pEnd_date),
-                approved: pApproved,
+                approved: 0,
                 status_event: 1,
                 creator_tokken: pCreator_tokken
             }
@@ -121,10 +120,10 @@ export namespace EventsManager {
                     conditions.push('APPROVED = 0');
                     break;
                 case 'ja_ocorridos':
-                    conditions.push('END_DATE < SYSDATE');
+                    conditions.push('END_DATE < SYSDATE AND APPROVED = 1');
                     break;
                 case 'futuros':
-                    conditions.push('START_DATE > SYSDATE');
+                    conditions.push('START_DATE > SYSDATE AND APPROVED = 1');
                     break;
                 default:
                     throw new Error('Filtro inválido.');
@@ -169,6 +168,109 @@ export namespace EventsManager {
             }
         } catch (error) {
             res.status(400).send("Erro");
+        }
+    };
+
+    async function evaluateNewEvent(eventId: number, approve: boolean) {
+        const connection = await DataBaseHandler.GetConnection();
+    
+        try {
+            const approvedStatus = approve ? 1 : 0;
+            await connection.execute(
+                'UPDATE EVENTS SET APPROVED = :approved WHERE ID = :eventId',
+                [approvedStatus, eventId]
+            );
+    
+            await connection.commit();
+    
+            if (!approve) {
+                const event = await connection.execute(
+                    'SELECT CREATOR_TOKKEN FROM EVENTS WHERE ID = :eventId',
+                    [eventId]
+                );
+    
+                // Verifica se `event.rows` não é undefined e possui pelo menos uma linha
+                if (event.rows && event.rows.length > 0) {
+                    const creatorTokken = event.rows[0][0];
+    
+                    const result = await connection.execute(
+                        'SELECT EMAIL FROM ACCOUNTS WHERE TOKKEN = :creator_tokken',
+                        [creatorTokken]
+                    );
+    
+                    // Verifica se `result.rows` não é undefined e possui pelo menos uma linha
+                    if (result.rows && result.rows.length > 0) {
+                        const creatorEmail = result.rows[0][0] as string;
+                        await sendRejectionEmail(creatorEmail);
+                    } else {
+                        console.warn("Nenhum e-mail encontrado para o criador do evento.");
+                    }
+                } else {
+                    console.warn("Nenhum criador encontrado para o evento.");
+                }
+            }
+    
+            return { success: true, message: approve ? 'Evento aprovado' : 'Evento reprovado e e-mail enviado' };
+    
+        } catch (error) {
+            console.error("Erro ao avaliar o evento:", error);
+            return { success: false, message: 'Erro ao processar o evento. Tente novamente mais tarde.' };
+    
+        } finally {
+            await connection.close();
+        }
+    }
+
+    async function sendRejectionEmail(to: string) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER, 
+                pass: process.env.EMAIL_PASSWORD 
+            }
+        });
+    
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to,
+            subject: 'Evento Reprovado',
+            text: `Infelizmente, o seu evento foi reprovado. Entre em contato para mais informações.`
+        };
+    
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`E-mail de reprovação enviado para: ${to}`);
+        } catch (error) {
+            console.error("Erro ao enviar e-mail:", error);
+        }
+    }
+    
+    export const evaluateEventHandler = async (req: Request, res: Response) => {
+        const { eventId, approve } = req.body;
+    
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            const result = await connection.execute('SELECT * FROM EVENTS WHERE ID = :eventId', [eventId]);
+    
+            // Verifica se `result.rows` existe e possui pelo menos uma linha
+            if (result.rows && result.rows.length > 0) {
+                const event = result.rows[0];
+    
+                const evaluationResult = await evaluateNewEvent(eventId, approve);
+    
+                if (evaluationResult.success) {
+                    res.status(200).send(evaluationResult.message);
+                } else {
+                    res.status(500).send(evaluationResult.message);
+                }
+            } else {
+                res.status(404).send('Evento não encontrado');
+            }
+        } catch (error) {
+            console.error("Erro ao buscar evento:", error);
+            res.status(500).send("Erro interno ao buscar evento.");
+        } finally {
+            await connection.close();
         }
     };
 }
