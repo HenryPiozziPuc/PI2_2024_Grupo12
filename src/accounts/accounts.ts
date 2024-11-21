@@ -140,6 +140,7 @@ export namespace AccountsManager {
             await connection.commit();
             return { success: true, message: 'Conta e carteira criados com sucesso.' };
         } catch (error) {
+            console.log( error );
             return { success: false, message: 'Erro ao criar conta. Tente novamente mais tarde.' }
         } finally {
             await connection.close();
