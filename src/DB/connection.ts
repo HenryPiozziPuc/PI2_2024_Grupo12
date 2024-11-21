@@ -76,7 +76,7 @@ export namespace DataBaseHandler {
 
             if ((eventCheck.rows as any[])?.[0]?.COUNT === 0) {
                 await connection.execute(`
-                    INSERT INTO EVENTS (ID, NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, STATUS_EVENT)
+                    INSERT INTO EVENTS (ID, NAME, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT)
                     VALUES (1, 'Campeonato Brasileiro', 'Esporte', 10, TO_DATE('2024-10-01', 'YYYY-MM-DD'), TO_DATE('2024-12-31', 'YYYY-MM-DD'), 1, 1)
                 `);
             }
