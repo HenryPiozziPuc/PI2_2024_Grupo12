@@ -147,6 +147,25 @@ export namespace AccountsManager {
         }
     }
 
+    //função para verificar a idade do elemento
+    const isOver18 = (birthdate: string): boolean => {
+        const birth = new Date(birthdate);
+        const today = new Date();
+    
+        // Calcula a idade em anos
+        let age = today.getFullYear() - birth.getFullYear();
+    
+        // Ajusta a idade se o aniversário ainda não ocorreu no ano atual
+        if (
+            today.getMonth() < birth.getMonth() ||
+            (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+        ) {
+            age--;
+        }
+    
+        return age >= 18;
+    };
+
     /* SignUpHandler funcionando */
     export const SignUpHandler: RequestHandler = async (req: Request, res: Response) => {
         const pCPF = parseInt(req.get('CPF') || '', 10);
@@ -158,6 +177,12 @@ export namespace AccountsManager {
 
         // Verificação se todos os parâmetros foram fornecidos e são válidos
         if (pCPF && pName && pEmail && pPhoneNumber && pBirthdate && pPassword) {
+            //verificaçao da idade do usuario
+            if (!isOver18(pBirthdate)) {
+                res.status(400).send("Usuário deve ter pelo menos 18 anos.");
+                return;
+            }
+
             const newAccount: UserAccount = {
                 CPF: pCPF,
                 completeName: pName,
