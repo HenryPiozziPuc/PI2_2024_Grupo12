@@ -1,5 +1,4 @@
 import {Request, RequestHandler, Response} from "express";
-import OracleDB, { oracleClientVersion } from "oracledb";
 import { DataBaseHandler } from "../DB/connection";
 import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
@@ -119,7 +118,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                         return 'Saldo insuficiente, tente novamente.';
                     }
                     const balance =  Number(rows[0][0]);
-                    console.log(balance); // debug temporario
                     newBalance = balance - wallet.amountWithdraw;
                 } else {
                     return 'Carteira não encontrada, tente novamente.'

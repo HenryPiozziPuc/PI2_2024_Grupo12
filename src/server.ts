@@ -4,8 +4,7 @@ import { AccountsManager } from "./accounts/accounts";
 import { BetsManager } from "./bets/bets";
 import { EventsManager } from "./events/events";
 import { FinancialManager } from "./financial/financial";
-import { DataBaseHandler } from './DB/connection';
-import cookieParser from 'cookie-parser'; // Importar cookie-parser
+import cookieParser from 'cookie-parser';
 
 const port = 3000; 
 const server = express();
@@ -14,11 +13,12 @@ const routes = Router();
 // Utilizando Cookies para salvar o Token, a role e autenticar o usuário 
 server.use(cookieParser());
 
+// Middleware global para autenticação e adição de informações ao 'req'
 declare global {
     namespace Express {
         interface Request {
-            userEmail?: string;
-            userRole?: string;
+            userEmail?: string; // E-mail do usuário autenticado
+            userRole?: string;  // Permissão do usuário
         }
     }
 }
@@ -34,9 +34,9 @@ routes.post('/login', AccountsManager.loginHandler);
 routes.put('/signUp', AccountsManager.SignUpHandler);
 
 // Bets
-// routes.post('/betOnEvent', BetsManager.betOnEvent);
-// routes.post('/finishEvent', BetsManager.finishEvent);
-// routes.get('/searchEvent', BetsManager.searchEvent);
+routes.post('/betOnEvent', BetsManager.BetOnEventHandler);
+routes.post('/finishEvent', BetsManager.FinishEventHandler);
+routes.get('/searchEvent', BetsManager.SearchEventHandler);
 
 // Events
 routes.put('/addNewEvent', EventsManager.addNewEventHandler);
