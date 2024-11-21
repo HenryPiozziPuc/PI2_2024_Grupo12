@@ -1,6 +1,7 @@
 import {Request, RequestHandler, Response} from "express";
 import { DataBaseHandler } from "../DB/connection";
 import nodemailer from 'nodemailer';
+require('dotenv').config();
 
 export namespace EventsManager {
 
@@ -8,7 +9,7 @@ export namespace EventsManager {
     export type Event = {
         name: string,
         category: string,
-        fee: number,
+        quota: number,
         start_date: Date,
         end_date: Date,
         approved: number,
@@ -23,8 +24,8 @@ export namespace EventsManager {
         const connection = await DataBaseHandler.GetConnection();
         try {
             await connection.execute(
-                'INSERT INTO EVENTS (ID, NAME, CATEGORY, FEE, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF) VALUES(SEQ_EVENTS.NEXTVAL, :name,:category,:fee,:start_date,:end_date,:approved,:status_event,:creator_CPF)',
-                [event.name, event.category, event.fee, event.start_date, event.end_date, event.approved, event.status_event, event.creator_CPF]
+                'INSERT INTO EVENTS (ID, NAME, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF) VALUES(SEQ_EVENTS.NEXTVAL, :name,:category,:quota,:start_date,:end_date,:approved,:status_event,:creator_CPF)',
+                [event.name, event.category, event.quota, event.start_date, event.end_date, event.approved, event.status_event, event.creator_CPF]
             );
             await connection.commit();
             return { success: true, message: 'Evento criado com sucesso.' };
@@ -40,16 +41,16 @@ export namespace EventsManager {
     export const addNewEventHandler: RequestHandler = async (req: Request, res: Response) =>{
         const pName = req.get('name');
         const pCategory = req.get('category');
-        const pFee = parseInt(req.get('fee') || '');
+        const pQuota = parseInt(req.get('quota') || '');
         const pStart_date = req.get('start_date');
         const pEnd_date = req.get('end_date');
         const pCreator_CPF = parseInt(req.get('creator_CPF') || '');
 
-        if(pName && pCategory && !isNaN(pFee) && pStart_date && pEnd_date && !isNaN(pCreator_CPF)){
+        if(pName && pCategory && !isNaN(pQuota) && pStart_date && pEnd_date && !isNaN(pCreator_CPF)){
             const newEvent: Event = {
                 name: pName,
                 category: pCategory,
-                fee: pFee,
+                quota: pQuota,
                 start_date: new Date(pStart_date),
                 end_date: new Date (pEnd_date),
                 approved: 0,
@@ -101,7 +102,7 @@ export namespace EventsManager {
             const events = result.rows?.map(row => ({
                 name: row[0],
                 category: row[1],
-                fee: row[2],
+                quota: row[2],
                 start_date: row[3],
                 end_date: row[4],
                 approved: row[5],
@@ -117,9 +118,8 @@ export namespace EventsManager {
             await connection.close();
         }
     }
-
+    
     /* getEventsHandler Funcionando */
-
     export const getEventsHandler: RequestHandler = async (req: Request, res: Response) => {
         const filter = req.get('filter');
 
@@ -182,16 +182,17 @@ export namespace EventsManager {
         }
     };
 
+    /* sendRejectionEmail Funcionando */
     async function sendRejectionEmail(to: string) {
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'mail.woodlaw.com.br', // Substitua pelo seu domínio
+            port: 465, // Use 465 para SSL ou 587 para TLS
+            secure: true, // Defina como true para 465, e false para 587
             auth: {
-                user: process.env.EMAIL_USER, 
-                pass: process.env.EMAIL_PASSWORD 
+                user: process.env.EMAIL_USER, // Seu e-mail completo na HostGator
+                pass: process.env.EMAIL_PASSWORD // Sua senha de e-mail
             }
         });
-
-        
     
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -208,48 +209,52 @@ export namespace EventsManager {
         }
     }
     
-    async function evaluateNewEvent(eventId: number, approve: string) {
+    /* evaluateNewEvent Funcionando */
+    async function evaluateNewEvent(eventId: number, approved: string) {
         const connection = await DataBaseHandler.GetConnection();
+
+        const aApprove = Number(approved);
     
         try {
-            const approvedStatus = approve ? 1 : 0;
+        
             await connection.execute(
-                'UPDATE EVENTS SET APPROVED = :approved WHERE ID = :eventId',
-                [approvedStatus, eventId]
+                'UPDATE EVENTS SET APPROVED = :aApprove WHERE ID = :eventId',
+                [aApprove, eventId]
             );
             
             await connection.commit();
     
-            if (!approvedStatus) {
+            if (aApprove === 0) {
                 const eventResult = await connection.execute(
                     'SELECT CPF FROM EVENTS WHERE ID = :eventId',
                     [eventId]
                 );
-
+                
                 const rows: number[][] = eventResult.rows as number[][];
-    
-                // Verifica se `event.rows` não é undefined e possui pelo menos uma linha
+                
+                // Verifica se rows não é undefined e possui pelo menos uma linha
                 if (eventResult.rows && eventResult.rows.length > 0) {
-                    const creator_CPF = eventResult.rows[0];
-    
+                    const creator_CPF = (eventResult.rows as number[][])[0][0];
+                
                     const EmailResult = await connection.execute(
                         'SELECT EMAIL FROM ACCOUNTS WHERE CPF = :creator_CPF',
                         [creator_CPF]
                     );
-    
+
                     // Verifica se `result.rows` não é undefined e possui pelo menos uma linha
                     if (EmailResult.rows && EmailResult.rows.length > 0) {
                         const creatorEmail = EmailResult.rows[0] as string;
                         await sendRejectionEmail(creatorEmail);
                     } else {
-                        console.warn("Nenhum e-mail encontrado para o criador do evento.");
+                        return {sucess: false, message: 'Nenhum e-mail encontrado para o criador do evento.'};
                     }
                 } else {
-                    console.warn("Nenhum criador encontrado para o evento.");
+                    return {sucess: false, message: 'Nenhum criador encontrado para o evento.'};
                 }
+                return { success: false, message: 'Evento reprovado e e-mail enviado para o criador.' };
             }
     
-            return { success: true, message: approve ? 'Evento aprovado' : 'Evento reprovado e e-mail enviado' };
+            return { success: true, message: 'Evento aprovado'};
     
         } catch (error) {
             console.error("Erro ao avaliar o evento:", error);
@@ -260,16 +265,17 @@ export namespace EventsManager {
         }
     }
     
+    /* evaluateEventHandler Funcionando */
     export const evaluateEventHandler = async (req: Request, res: Response) => {
         const eID = Number(req.get('eventID'));
-        const pApprove = req.get('approve');
+        const pApproved = req.get('approved');
 
-        if (pApprove !== '0' && pApprove !== '1') {
+        if (pApproved !== '0' && pApproved !== '1') {
             res.status(400).send("Parâmetros inválidos. Digite 1 ou 0 para aprovar ou rejeitar o evento.");
         }
 
-        if (eID && pApprove) {
-            const evaluationResult = await evaluateNewEvent(eID, pApprove);
+        if (eID && pApproved) {
+            const evaluationResult = await evaluateNewEvent(eID, pApproved);
 
             if (evaluationResult.success) {
                 res.status(200).send(evaluationResult.message);
@@ -279,8 +285,5 @@ export namespace EventsManager {
         } else {
             res.status(400).send("Parâmetros inválidos ou faltantes.");
         }
-        
-
     };
-
 }
