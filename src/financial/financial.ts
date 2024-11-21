@@ -92,6 +92,20 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                 res.status(400).send("Todas as informações devem ser fornecidas.");
             }
         };
+
+        // Função auxiliar para calcular a taxa com base no valor do saque
+        function calculateWithdrawFee(amount: number): number {
+            if (amount <= 100) {
+                return amount * 0.04; // 4%
+            } else if (amount <= 1000) {
+                return amount * 0.03; // 3%
+            } else if (amount <= 5000) {
+                return amount * 0.02; // 2%
+            } else if (amount <= 100000) {
+                return amount * 0.01; // 1%
+            }
+            return 0; // Isento para valores acima de R$ 101.000
+        }
         
         /* withdrawFunds Funcionando */
         async function withdrawFunds(wallet: WithdrawFundsParams) {
@@ -103,7 +117,7 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                 );
     
                 const rows: any[][] = balanceResult.rows as any[][];
-                
+                const withdrawFee = calculateWithdrawFee(wallet.amountWithdraw);//calculando taxa
                 let newBalance = 0;
     
                 if (rows.length > 0) {
@@ -112,13 +126,17 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                     if (wallet.amountWithdraw <= 0) {
                         return 'Valor inválido, digite um valor maior que 0.';
                     }
-
-                    // Verificando a WalletBalance e o amountWithdraw
-                    if (wallet.amountWithdraw > rows[0][0]) {
-                        return 'Saldo insuficiente, tente novamente.';
-                    }
+                    
                     const balance =  Number(rows[0][0]);
-                    newBalance = balance - wallet.amountWithdraw;
+                    const totalWithdraw = wallet.amountWithdraw + withdrawFee;//somando taxa com saque
+                    
+                    // Verificando a WalletBalance e o amountWithdraw
+                    if (totalWithdraw > balance) {
+                        return `Saldo insuficiente. Taxa de saque: R$ ${withdrawFee.toFixed(2)}. Tente novamente.`;
+                    }
+                    
+                    newBalance = balance - totalWithdraw;
+
                 } else {
                     return 'Carteira não encontrada, tente novamente.'
                 }
@@ -130,7 +148,7 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
                 await connection.commit();
 
-                return `Saldo retirado com sucesso! Seu novo saldo é ${newBalance}`;
+                return `Saldo retirado com sucesso! Taxa cobrada: R$ ${withdrawFee.toFixed(2)}. Seu novo saldo é ${newBalance}`;
 
             } catch (error) {
                 await connection.rollback();
