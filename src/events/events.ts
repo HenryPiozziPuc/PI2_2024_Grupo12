@@ -37,6 +37,18 @@ export namespace EventsManager {
         }
     }
 
+    //função para verificar se evento está no futuro
+    const isDateInFuture = (date: string): boolean => {
+        const givenDate = new Date(date);
+        const today = new Date();
+    
+        // Remove a parte de horas/minutos/segundos para comparar apenas as datas
+        today.setHours(0, 0, 0, 0);
+        givenDate.setHours(0, 0, 0, 0);
+    
+        return givenDate >= today;
+    };
+
     /* AddNewEventHandler Funcionando */
     export const addNewEventHandler: RequestHandler = async (req: Request, res: Response) =>{
         const pName = req.get('name');
@@ -47,6 +59,12 @@ export namespace EventsManager {
         const pCreator_CPF = parseInt(req.get('creator_CPF') || '');
 
         if(pName && pCategory && !isNaN(pQuota) && pStart_date && pEnd_date && !isNaN(pCreator_CPF)){
+
+             // Verifica se a data de início é válida (não está no passado)
+            if (!isDateInFuture(pStart_date)) {
+                res.status(400).send("A data de início do evento não pode estar no passado.");
+                return;
+            }
             const newEvent: Event = {
                 name: pName,
                 category: pCategory,
@@ -80,14 +98,25 @@ export namespace EventsManager {
             let parameters: Record<string, any> = {};
 
             switch (filter) {
-                case 'aguardando_aprovacao':
-                    conditions.push('APPROVED = 0');
+                case 'finalizando': //categorização exigida
+                    conditions.push('end_date >= CURRENT_DATE AND APPROVED = 1 ORDER BY end_date ASC ');
                     break;
-                case 'ja_ocorridos':
-                    conditions.push('END_DATE < SYSDATE AND APPROVED = 1');
+
+                case 'mais_apostas': // outra categorização exigida, mas essa tinha q fazer a relação com a tabela bets
+                    query = `SELECT E.*, COUNT(B.ID) AS BET_COUNT
+                            FROM EVENTS E
+                            LEFT JOIN BETS B ON E.ID = B.EVENT_ID
+                            WHERE APPROVED = 1
+                            GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CREATOR_TOKKEN
+                            ORDER BY BET_COUNT DESC`;
                     break;
-                case 'futuros':
-                    conditions.push('START_DATE > SYSDATE AND APPROVED = 1');
+                
+                case 'agrupados_por_categoria':// outra categorização
+                    query = `SELECT CATEGORY, COUNT(*) AS EVENT_COUNT
+                            FROM EVENTS
+                            WHERE APPROVED = 1
+                            GROUP BY CATEGORY
+                            ORDER BY EVENT_COUNT DESC`;
                     break;
                 default:
                     throw new Error('Filtro inválido.');
@@ -99,16 +128,20 @@ export namespace EventsManager {
 
             const result = await connection.execute<EventRow[]>(query, parameters);
 
-            const events = result.rows?.map(row => ({
-                name: row[0],
-                category: row[1],
-                quota: row[2],
-                start_date: row[3],
-                end_date: row[4],
-                approved: row[5],
-                status_event: row[6],
-                creator_tokken: row[7]
+            const events = result.rows?.map(row => ({ 
+                //alterado pra ficar condizente com os selects
+                id: row[0],
+                name: row[1],
+                category: row[2],
+                quota: row[3],
+                start_date: row[4],
+                end_date: row[5],
+                approved: row[6],
+                status_event: row[7],
+                creator_tokken: row[8],
+                bet_count: filter === 'mais_apostas' ? row[9] : null 
             })) || [];
+    
 
             return { success: true, events };
         } catch (error) {
