@@ -105,8 +105,9 @@ body {
     font-style: normal;
   }
   
+  
 /* Estilizando o botão de fechar do modal */
-.modal .btn-close {
+  .modal .btn-close {
     background-color: #ffffff; /* Cor de fundo do botão de fechar */
     border-radius: 50%; /* Deixa o botão redondo */
     border: none; /* Remove borda padrão */
@@ -148,13 +149,13 @@ body {
   .modal .btn-primary:hover {
     background-color: #9170F0;
   }
-  .form-check-input {
+  .register-link {
     text-decoration: underline;
     color: #5D32D9;
     font-weight: bold;
   }
   
-  .form-check-input:hover {
+  .register-link:hover {
     color: #9170F0;
     text-decoration: underline;
   }
