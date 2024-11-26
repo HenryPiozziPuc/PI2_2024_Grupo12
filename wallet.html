@@ -17,7 +17,7 @@
       </div>
 
       <!-- Formulário de Transação -->
-      <form id="transaction-form">
+      <form id="transaction-form" onsubmit="showModal(event)">
         <div>
           <label class="label">Tipo de Transação</label>
           <div class="button-group">
@@ -38,31 +38,63 @@
           <label for="description" class="label">Descrição (Opcional)</label>
           <input type="text" id="description" class="input">
         </div>
-        <button type="submit" class="btn submitButton">Enviar Transação</button>
+        <button type="submit" class="btn submitButton">Realizar Transação</button>
       </form>
     </div>
   </div>
- <!-- Histórico de Transações -->
-  <div class="historySectiona">
-    <h2 class="historyTitle">Histórico de Transações</h2>
 
-    <div class="tableWrapper">
-      <table class="table">
-        <thead>
-          <tr>
-            <th class="tableHeader">Data</th>
-            <th class="tableHeader">Tipo</th>
-            <th class="tableHeader">Valor</th>
-            <th class="tableHeader">Descrição</th>
-          </tr>
-        </thead>
-        <tbody id="transaction-history">
-          <!-- As transações serão inseridas aqui -->
-        </tbody>
-      </table>
+  <!-- Modal para Depositar -->
+  <div id="modal-deposit" class="modal">
+    <p>Você escolheu Depositar.</p>
+    <button class="btn" onclick="closeModal()">Fechar</button>
+  </div>
+
+  <!-- Modal para Sacar -->
+  <div id="modal-withdraw" class="modal">
+    <p>Como deseja receber seu dinheiro?</p>
+    <input type="radio" id="pix" name="type-of-transaction" class="radio-input" checked>
+    <label for="pix" class="btn">Pix</label>
+    <input type="radio" id="Conta-Bancaria" name="type-of-transaction" class="radio-input">
+    <label for="Conta-Bancaria" class="btn">Conta Bancária</label>
+    <div>
+      <label for="bank" class="label">Banco:</label>
+      <input id="bank" class="input" type="text" placeholder="Banco do Brasil, Sicredi" required>
     </div>
-</div>
-</div>
-</div>
+    <div>
+      <label for="agency" class="label">Agência / Número de Conta Corrente:</label>
+      <input id="agency" class="input"  type="text" placeholder="Por exemplo: 1000/10001-1" required>
+    </div>
+    <button class="btn" onclick="closeModal()">Fechar</button>
+  </div>
+
+  <!-- Backdrop para os modais -->
+  <div id="modal-backdrop" class="modal-backdrop"></div>
+
+  <script>
+    function showModal(event) {
+      event.preventDefault(); // Impede o envio do formulário
+      const depositRadio = document.getElementById('deposit');
+      const withdrawRadio = document.getElementById('withdraw');
+      const modalDeposit = document.getElementById('modal-deposit');
+      const modalWithdraw = document.getElementById('modal-withdraw');
+      const backdrop = document.getElementById('modal-backdrop');
+
+      // Verifica qual botão de rádio está selecionado
+      if (depositRadio.checked) {
+        modalDeposit.classList.add('show');
+      } else if (withdrawRadio.checked) {
+        modalWithdraw.classList.add('show');
+      }
+      backdrop.classList.add('show'); // Mostra o backdrop
+    }
+
+    function closeModal() {
+      const modals = document.querySelectorAll('.modal');
+      const backdrop = document.getElementById('modal-backdrop');
+
+      modals.forEach(modal => modal.classList.remove('show'));
+      backdrop.classList.remove('show'); // Esconde o backdrop
+    }
+  </script>
 </body>
 </html>
