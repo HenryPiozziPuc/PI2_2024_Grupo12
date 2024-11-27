@@ -93,7 +93,7 @@ input#withdraw:checked + label {
 }
 
 .submitButton {
-  width: 100%;
+  width: 25%;
   padding: 0.5rem 1rem;
   background-color: #2563eb;
   color: white;
