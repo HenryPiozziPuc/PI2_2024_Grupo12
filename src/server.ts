@@ -5,6 +5,7 @@ import { BetsManager } from "./bets/bets";
 import { EventsManager } from "./events/events";
 import { FinancialManager } from "./financial/financial";
 import cookieParser from 'cookie-parser';
+import cors from "cors";
 
 const port = 3000; 
 const server = express();
@@ -12,6 +13,9 @@ const routes = Router();
 
 // Utilizando Cookies para salvar o Token, a role e autenticar o usuário 
 server.use(cookieParser());
+
+// Configurando CORS
+server.use(cors()); // Permite requisições de qualquer origem
 
 // Middleware global para autenticação e adição de informações ao 'req'
 declare global {

@@ -29,7 +29,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
         async function addFunds(wallet: AddFundsParams) {
 
             const connection = await DataBaseHandler.GetConnection();
-            
             try {
                 const balanceResult = await connection.execute(
                     'SELECT BALANCE FROM WALLET WHERE CPF = :cpf',

@@ -195,26 +195,41 @@ export namespace BetsManager {
         }
     };
 
-
     /* Função para buscar eventos com base em uma palavra-chave */
     async function searchEvents(params: EventSearchParams) {
         const connection = await DataBaseHandler.GetConnection();
         try {
             const { keyword } = params;
 
-            // Busca eventos que contêm a palavra-chave no nome
+            // Consulta SQL com LEFT JOIN e COUNT para contar as apostas
             const eventsResult = await connection.execute(
-                'SELECT ID, NAME, CATEGORY FROM EVENTS WHERE LOWER(NAME) LIKE :keyword',
+                `SELECT E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, 
+                        COUNT(B.ID) AS BET_COUNT
+                FROM EVENTS E
+                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                WHERE LOWER(E.NAME) LIKE :keyword
+                GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                ORDER BY E.APPROVED DESC`, 
                 [`%${keyword.toLowerCase()}%`]
             );
 
             const events = eventsResult.rows as any[][];
-            if (events.length === 0) return "Nenhum evento encontrado.";
+
+            if (events.length === 0) {
+                return "Nenhum evento encontrado.";
+            }
 
             return events.map(event => ({
-                id: event[0],
-                name: event[1],
-                category: event[2]
+                id: event[0],                  // ID do evento
+                name: event[1],                // Nome do evento
+                category: event[2],            // Categoria
+                quota: event[3],               // Quota
+                start_date: event[4],          // Data de início
+                end_date: event[5],            // Data de término
+                approved: event[6],            // Status de aprovação
+                status_event: event[7],        // Status do evento
+                cpf: event[8],                 // CPF
+                bet_count: event[9] ?? 0       // Contagem de apostas (com valor padrão 0 caso não haja apostas)
             }));
         } catch (error) {
             return (error as Error).message;
@@ -234,4 +249,6 @@ export namespace BetsManager {
         const result = await searchEvents({ keyword });
         res.status(200).send(result);
     };
+
+
 }

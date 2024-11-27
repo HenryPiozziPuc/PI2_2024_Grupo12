@@ -28,7 +28,7 @@ export namespace EventsManager {
                 [event.name, event.category, event.quota, event.start_date, event.end_date, event.approved, event.status_event, event.creator_CPF]
             );
             await connection.commit();
-            return { success: true, message: 'Evento criado com sucesso.' };
+            return { success: true, message: 'Evento criado com sucesso. Em Breve um moderador irá aprovar seu evento!' };
         } catch (error) {
             console.error('Erro ao criar evento:', error);
             return { success: false, message: 'Erro ao criar evento. Tente novamente mais tarde.' }
@@ -98,26 +98,38 @@ export namespace EventsManager {
             let parameters: Record<string, any> = {};
 
             switch (filter) {
-                case 'finalizando': //categorização exigida
-                    conditions.push('end_date >= CURRENT_DATE AND APPROVED = 1 ORDER BY end_date ASC ');
+                case 'finalizando': // Categorizar eventos em andamento, próximos de vencer
+                    conditions.push(`end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 2 AND APPROVED = 1`);
                     break;
 
-                case 'mais_apostas': // outra categorização exigida, mas essa tinha q fazer a relação com a tabela bets
+                case 'mais_apostas': // Eventos com mais apostas
+                    query = `
+                        SELECT E.*, COUNT(B.ID) AS BET_COUNT
+                        FROM EVENTS E
+                        LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                        WHERE E.APPROVED = 1
+                        GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                        HAVING COUNT(B.ID) > 0
+                        ORDER BY BET_COUNT DESC `;
+                    break;
+
+                case 'agrupados_por_categoria': // Eventos completos agrupados por categoria
                     query = `SELECT E.*, COUNT(B.ID) AS BET_COUNT
-                            FROM EVENTS E
-                            LEFT JOIN BETS B ON E.ID = B.EVENT_ID
-                            WHERE APPROVED = 1
-                            GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CREATOR_TOKKEN
-                            ORDER BY BET_COUNT DESC`;
+                        FROM EVENTS E
+                        LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                        WHERE E.APPROVED = 1
+                        GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                        ORDER BY E.CATEGORY ASC, E.NAME ASC`;
                     break;
                 
-                case 'agrupados_por_categoria':// outra categorização
-                    query = `SELECT CATEGORY, COUNT(*) AS EVENT_COUNT
-                            FROM EVENTS
-                            WHERE APPROVED = 1
-                            GROUP BY CATEGORY
-                            ORDER BY EVENT_COUNT DESC`;
+                case 'all_events': // Todos os eventos aprovados
+                    query = `SELECT E.*, COUNT(B.ID) AS BET_COUNT
+                    FROM EVENTS E
+                    LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                    GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                    ORDER BY E.APPROVED DESC`;       
                     break;
+
                 default:
                     throw new Error('Filtro inválido.');
             }
@@ -128,8 +140,7 @@ export namespace EventsManager {
 
             const result = await connection.execute<EventRow[]>(query, parameters);
 
-            const events = result.rows?.map(row => ({ 
-                //alterado pra ficar condizente com os selects
+            const events = result.rows?.map(row => ({
                 id: row[0],
                 name: row[1],
                 category: row[2],
@@ -138,10 +149,9 @@ export namespace EventsManager {
                 end_date: row[5],
                 approved: row[6],
                 status_event: row[7],
-                creator_tokken: row[8],
-                bet_count: filter === 'mais_apostas' ? row[9] : null 
+                creator_CPF: row[8],
+                bet_count: filter === 'mais_apostas' || filter === 'all_events' || filter === 'agrupados_por_categoria' ? row[9] : null // Contagem de apostas
             })) || [];
-    
 
             return { success: true, events };
         } catch (error) {
@@ -154,8 +164,7 @@ export namespace EventsManager {
     
     /* getEventsHandler Funcionando */
     export const getEventsHandler: RequestHandler = async (req: Request, res: Response) => {
-        const filter = req.get('filter');
-
+        const filter = req.get('filter');  // Parâmetro "filter" do header
         try {
             if (filter) {
                 const result = await getFilteredEvents(filter);
@@ -164,11 +173,11 @@ export namespace EventsManager {
                 } else {
                     res.status(400).send(result.message);
                 }
+            } else {
+                res.status(400).send("Filtro não especificado.");
             }
-                
-            
         } catch (error) {
-            res.status(400).send("Erro");
+            res.status(400).send("Erro ao buscar eventos.");
         }
     };
 

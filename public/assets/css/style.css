@@ -1,0 +1,816 @@
+@font-face {
+    font-family: "Sofia Pro Light";
+    src: url("../fonts/sofia-light.woff");
+    /* IE9 Compat Modes */
+    font-style: normal;
+    font-weight: 200;
+}
+
+@font-face {
+    font-family: "Sofia Pro Regular";
+    src: url("../fonts/sofia-regular.woff");
+    /* IE9 Compat Modes */
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: "Sofia Pro Bold";
+    src: url("../fonts/sofia-bold.woff");
+    /* IE9 Compat Modes */
+    font-style: normal;
+    font-weight: 800;
+}
+
+/* Global Styles */
+body {
+    margin: 0;
+    font-family: "Sofia Pro Regular", sans-serif;
+    color: #fff;
+    background: #0f1923;
+}
+
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Inverte a cor do ícone do seletor */
+        }
+
+button {
+    font-family: 'Sofia Pro Bold' , sans-serif;
+    cursor: pointer;
+}
+
+input::placeholder {
+    font-family: "Sofia Pro Regular", sans-serif;  /* Define a fonte */
+    color: #bcbfc7; /* Define a cor do placeholder */
+    opacity: 1; /* Torna o texto totalmente opaco (opcional) */
+}
+
+/* Utility Classes */
+.d-flex {
+    display: flex;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-10 {
+    gap: 10px;
+}
+
+.gap-20 {
+    gap: 20px;
+}
+
+.gap-30 {
+    gap: 30px;
+}
+
+.pd-0 {
+    padding: 0;
+}
+
+.pd-10 {
+    padding: 10px;
+}
+
+.pd-20 {
+    padding: 20px;
+}
+
+.pd-30 {
+    padding: 30px;
+}
+
+.pd-40 {
+    padding: 40px;
+}
+
+.pd-top-0 {
+    padding-top: 0;
+}
+
+.pd-top-10 {
+    padding-top: 10px;
+}
+
+.pd-top-20 {
+    padding-top: 20px;
+}
+
+.pd-top-30 {
+    padding-top: 30px;
+}
+
+.pd-top-40 {
+    padding-top: 40px;
+}
+
+.pd-bottom-0 {
+    padding-bottom: 0;
+}
+
+.pd-bottom-10 {
+    padding-bottom: 10px;
+}
+
+.pd-bottom-20 {
+    padding-bottom: 20px;
+}   
+
+.pd-bottom-30 {
+    padding-bottom: 30px;
+}   
+
+.pd-bottom-40 {
+    padding-bottom: 40px;
+}   
+
+.mb-0 {
+    margin-bottom: 0 !important;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mb-15 {
+    margin-bottom: 15px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.mb-30 {
+    margin-bottom: 30px;
+}
+
+.mb-40 {
+    margin-bottom: 40px;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Anchor Tags (a) */
+a {
+    text-decoration: none;
+    /* Remove underline */
+    color: #1e90ff;
+    /* Azul padrão */
+    font-weight: 500;
+    transition: color 0.3s ease, text-decoration 0.3s ease;
+}
+
+a:hover {
+    cursor: pointer;
+}
+
+a:active {
+    color: #0056b3;
+    /* Azul mais escuro ao clicar */
+}
+
+/* Paragraphs (p) */
+p {
+    margin: 0;
+    margin-bottom: 1rem;
+    /* Espaçamento entre parágrafos */
+    font-size: 1rem;
+    /* 16px */
+    line-height: 1.6;
+    color: #e0e0e0;
+    /* Cinza claro */
+    font-weight: 400;
+}
+
+/* Span */
+span {
+    font-size: 1rem;
+    /* 16px */
+    font-weight: 400;
+    color: inherit;
+    /* Herdar a cor do elemento pai */
+    display: inline;
+    text-transform: none;
+    /* Garantir que o texto não seja modificado */
+    line-height: 1.6;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    p {
+        font-size: 0.9rem;
+        /* 14px para dispositivos menores */
+    }
+
+    span {
+        font-size: 0.9rem;
+        /* Ajuste proporcional para spans */
+    }
+}
+
+/* Heading Styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #ffffff;
+    font-family: "Sofia Pro Regular", sans-serif;
+}
+
+/* Heading Sizes */
+h1 {
+    font-size: 3rem;
+    /* 48px */
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 2.5rem;
+    /* 40px */
+    margin-bottom: 18px;
+}
+
+h3 {
+    font-size: 2rem;
+    /* 32px */
+    margin-bottom: 16px;
+}
+
+h4 {
+    font-size: 1.5rem;
+    /* 24px */
+    margin-bottom: 14px;
+}
+
+h5 {
+    font-size: 1.25rem;
+    /* 20px */
+    margin-bottom: 12px;
+}
+
+h6 {
+    font-size: 1rem;
+    /* 16px */
+    margin-bottom: 10px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5rem;
+        /* 40px */
+    }
+
+    h2 {
+        font-size: 2rem;
+        /* 32px */
+    }
+
+    h3 {
+        font-size: 1.75rem;
+        /* 28px */
+    }
+
+    h4 {
+        font-size: 1.5rem;
+        /* 24px */
+    }
+
+    h5 {
+        font-size: 1.125rem;
+        /* 18px */
+    }
+
+    h6 {
+        font-size: 1rem;
+        /* 16px */
+    }
+}
+
+/* Layout */
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 0;
+    box-sizing: border-box;
+}
+
+/* Components */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.padding-header {
+    padding: 15px 0;
+}
+
+.btn {
+    width: auto;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    font-weight: bolder;
+    border-radius: 100px;
+    font-size: 16px;
+    padding: 16px;
+}
+
+.btn.signup {
+    background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+    border: 1px solid rgb(54 28 145);
+    color: white;
+}
+
+.btn.login {
+    background-color: transparent;
+    color: rgb(255, 255, 255);
+    text-align: right;
+}
+
+.logo img {
+    width: 6rem;
+}
+
+/* Container de busca */
+.search-container {
+    background-color: #141a26;
+    border-radius: 8px;
+    margin: 0 auto;
+    max-width: 1200px;
+    /* Mesma largura do cabeçalho */
+}
+
+/* Barra de pesquisa */
+.search-bar {
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    /* Ocupa toda a largura do container */
+    height: 55px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2a2f3a;
+    /* Fundo da barra */
+    color: white;
+    padding: 0 12px;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #a0a4ad;
+}
+
+/* Botões das ligas */
+.sugestao-buttons {
+    display: flex;
+    margin-top: 10px;
+}
+
+.sugestao-button {
+    display: flex;
+    align-items: center;
+    background-color: #2a2f3a;
+    border-radius: 16px;
+    padding: 4px 10px;
+    margin-right: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sugestao-button:hover {
+    background-color: #364055;
+}
+
+/* Ícone das ligas */
+.sugestao-icon img {
+    border-radius: 50%;
+}
+
+/* Texto das ligas */
+.sugestao-text {
+    color: white;
+    font-size: 14px;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+/* Estilo do cartão principal */
+.welcome-container {
+    background: linear-gradient(223.7deg, #3b454e -0.11%, #131b24 50.01%);
+    color: #ffffff;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    margin: 0 auto;
+    padding: 46px 28px 53px;
+    font-style: normal;
+}
+
+/* Conteúdo do cartão de boas-vindas */
+.welcome-content {
+    padding: 32px 24px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    row-gap: 26px;
+    /* Espaçamento entre elementos */
+    flex-grow: 0.5;
+}
+
+/* Cabeçalho de boas-vindas */
+.welcome-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Subtítulo do cartão */
+.welcome-subtitle {
+    font-size: 16px;
+    color: #8c9099;
+    margin-bottom: 20px;
+}
+
+/* Container para seções menores */
+.steps-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Ícone e descrição de cada etapa */
+.step-description {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Texto de descrição */
+.step-text {
+    color: #8c9099;
+    font-size: 14px;
+}
+
+/* Estilo geral do contêiner */
+
+/* Título "Popular" */
+.title {
+    font-size: 1.5rem;
+    font-family: "Sofia Pro Bold", sans-serif;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.align-spacing {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Envoltório de categorias */
+.category-wrapper {
+    transition: height 0.25s;
+    overflow: visible;
+    height: auto;
+}
+
+/* Lista de categorias */
+.category-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Botão de categoria */
+.category-button {
+    display: inline-block;
+    padding: 10px 16px 7px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #2b2b2b;
+    color: #c5c5c5;
+}
+
+.category-button.active {
+    background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+    /* Botão ativo */
+    color: #ffffff;
+}
+
+.category-button.inactive:hover {
+    background-color: #404040;
+    color: #fff;
+}
+
+/* Texto do botão */
+.button-text {
+    text-align: center;
+}
+
+/* Contêiner geral dos cards */
+
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 2%;
+    transition: all 1s ease-in-out;
+}
+
+
+
+/* Card individual */
+.card {
+    width: 32%;
+    /* Tamanho fixo, ajustável */
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 2% 0 0;
+    color: #ffffff;
+    background: #1d2730;
+    box-sizing: border-box;
+    border-color: #1d2730;
+    border-radius: 8px;
+    opacity: 0; /* Inicialmente invisível */
+    transform: translateY(20px); /* Inicialmente deslocado para baixo */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Transição suave */
+}
+
+.card.visible {
+    opacity: 1; /* Tornar visível */
+    transform: translateY(0); /* Voltar à posição original */
+}
+
+.card-header {
+    display: flex;
+    padding: 0 0 30px;
+    font-size: 14px;
+    font-weight: 600;
+    flex-direction: column;
+}
+
+.card-category {
+    display: flex;
+    align-items: center;
+    color: rgb(142 147 152);
+    /* Ajuste a cor conforme necessário */
+    font-family: "Sofia Pro Bold";
+    font-size: 14px;
+    gap: 4px;
+}
+
+.category-icon {
+    fill: currentcolor;
+    color: inherit;
+    width: auto;
+    height: 8px;
+    margin: 0 2px;
+    opacity: 0.5;
+    transform: rotate(-90deg);
+}
+
+.card-date {
+    color: rgb(142 147 152);
+    /* Ajuste a cor conforme necessário */
+    font-family: "Sofia Pro Bold";
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+.live-indicator {
+    color: #f00;
+    font-weight: bold;
+}
+
+/* Corpo do card */
+.card-body {
+    margin-bottom: 16px;
+}
+
+.teams {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.scores {
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    font-weight: bold;
+    color: #00ff00;
+}
+
+/* Rodapé do card */
+.card-footer {
+    border-top: 1px solid #333;
+    padding-top: 8px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .card {
+        width: 100%;
+    }
+}
+
+.event-container {
+    display: flex;
+    align-items: flex-end;
+}
+
+.event-details-link {
+    flex: 1;
+    color: #ffffff;
+    height: 40px;
+    display: block;
+    font-size: 12px;
+    background: #2c3a49;
+    box-sizing: border-box;
+    margin-top: 8px;
+    text-align: center;
+    transition: all .3s cubic-bezier(0, 0, 0.2, 1);
+    font-weight: 700;
+    line-height: 40px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.event-details-link:hover {
+    background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+    color: rgb(255 255 255);
+}
+
+.event-icon-wrapper {
+    color: #ffffff;
+    width: 32px;
+    cursor: pointer;
+    height: 40px;
+    display: flex;
+    background: #2c3a49;
+    transition: all 0.3s ease-in-out;
+    align-items: center;
+    font-weight: 600;
+    margin-left: 8px;
+    border-color: #2c3a49;
+    border-radius: 8px;
+    justify-content: center;
+}
+
+.event-icon {
+    width: 16px;
+    height: 16px;
+    color: inherit;
+    display: flex;
+    transition: all 0.3s;
+    align-items: center;
+    justify-content: center;
+}
+
+.category,
+.cat-name {
+    line-height: 0;
+}
+
+section {
+    margin: 3rem 0;
+}
+
+/* Rodapé da página principal */
+footer {
+    padding: 3rem;
+}
+
+footer img {
+    padding-top: 2rem;
+    width: 7rem;
+}
+
+footer div.container {  
+    border-top: 1px solid #e0e0e01e;
+}
+
+footer .text-footer h4 {
+    font-family: "Sofia Pro Light", sans-serif;
+    font-weight: 100;
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    line-height: 1.2rem;
+}
+
+footer .links a {
+    color: #ffffff50;
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    line-height: 1.2rem;
+    margin-left: 0.5rem;
+    transition: all 0.3s ease-in-out;
+}
+
+
+/* MODAL AddNewEVent */
+
+/* Modal Geral */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #1d2730;
+    padding: 50px;
+    width: 400px;
+    border-radius: 8px;
+    color: #fff;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+input {
+    flex-grow: 1;
+    position: relative;
+    background: #0f1923;
+    border: 1px solid transparent;
+    height: 48px;
+    flex-direction: column;
+    display: flex;
+    border-radius: 4rem;
+    margin-bottom: 16px;
+    padding: 5px 16px;
+    justify-content: center;
+    color: #bcbfc7;
+    font-family: 'Sofia Pro Regular' , sans-serif;
+}
+
+.input {
+    display: flex;
+    justify-content: center;
+}
+
+.input.date {
+    width: -webkit-fill-available;
+    margin: 0 15px 0 0;
+}
+.btn.form {
+    background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+    border: 1px solid rgb(54 28 145);
+    color: white;
+    width: 100%;
+    margin-top: 20px;
+}
