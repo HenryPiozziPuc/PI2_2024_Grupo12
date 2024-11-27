@@ -212,4 +212,47 @@ export namespace AccountsManager {
         }
     };
 
+    async function GetCpfByToken(token: string) {
+        const connection = await DataBaseHandler.GetConnection();
+    
+        try {
+            const result = await connection.execute(
+                'SELECT CPF FROM ACCOUNTS WHERE TOKEN = :token',
+                [token]
+            );
+
+            const rows: any[][] = result.rows as any[][];
+    
+            if (result.rows && result.rows.length > 0) {
+                const cpf = rows[0][0]; 
+                return { success: true, message: 'Conta encontrada com sucesso', cpf };
+            } else {
+                return { success: false, message: 'Conta invalida' };
+            }
+        } catch (error) {
+            console.log(error);
+            return { success: false, message: 'Erro ao verificar conta' };
+        } finally {
+            await connection.close();
+        }
+    }
+
+    export const GetCpfByTokenHandler: RequestHandler = async (req: Request, res: Response) => {
+        const pToken = req.get('token') ;
+
+        if (pToken) {
+            
+            const result = await GetCpfByToken(pToken);
+            
+            if (result.success) {
+                res.status(200).send(result.cpf);
+            } else {
+                res.status(400).send(result.message);
+            }
+
+        } else {
+            res.status(400).send("Parâmetros inválidos ou faltantes.");
+        }
+    };
+
 }
