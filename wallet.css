@@ -1,174 +1,103 @@
-/* Estilo geral */
-.body {
-  display: contents;
-  flex-direction: column;
-  justify-content: center; /* Centraliza verticalmente */
-  min-height: 100vh; /* Altura mínima de 100% da tela */
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.container-fluid {
-  max-width: 72rem;
-  margin-top: auto;
-  padding-top: 5rem;
-  display:contents;
-  
+body {
+  font-family: 'Parkinsans', sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f9;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .card {
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 1rem; /* Aumentei o arredondamento da borda */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Aumentei a sombra */
-  margin-top: 4rem;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  background: #fff;
 }
 
-
-
 .label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
 
 .balance {
-  font-size: 1.875rem;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-/* Estilo dos botões */
-.button-group {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.25rem;
-}
-
-.radio-input {
-  display: none;
+.input, .btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .btn {
-  display: flex;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 0.375px;
+  background-color: #007bff;
+  color: #fff;
   cursor: pointer;
   text-align: center;
-  border: 2px solid transparent;
-  background-color: #d1d5db; /* Cinza claro */
-  color: #374151; /* Texto cinza escuro */
-  transition: all 0.3s ease;
 }
 
-/* Botão "Depositar" quando selecionado */
-input#deposit:checked + label {
-  background-color: #dcfce7; /* Verde claro */
-  color: #15803d; /* Verde escuro */
-  border-color: #22c55e; /* Verde forte */
+.btn:hover {
+  background-color: #0056b3;
 }
 
-/* Botão "Sacar" quando selecionado */
-input#withdraw:checked + label {
-  background-color: #fee2e2; /* Vermelho claro */
-  color: #b91c1c; /* Vermelho escuro */
-  border-color: #ef4444; /* Vermelho forte */
+.table-container {
+  margin-top: 20px;
 }
 
-/* Estilo para o formulário */
-.input {
+table {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.submitButton {
-  width: 25%;
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.submitButton:hover {
-  background-color: #1d4ed8;
-}
-
-.submitButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.historySection {
-  margin-top: 2rem;
-}
-
-.historyTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.tableWrapper {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.table {
-  min-width: 50%;
   border-collapse: collapse;
 }
 
-.tableHeader {
-  padding: 0.75rem 1.5rem;
+table th, table td {
   text-align: left;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  color: #6b7280;
-  background-color: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 10px;
+  border: 1px solid #ddd;
 }
 
-.tableCell {
-  padding: 1rem 1.5rem;
-  font-size: 0.875rem;
-  color: #374151;
-  white-space: nowrap;
-  border-bottom: 1px solid #e5e7eb;
+thead {
+  background-color: #f4f4f4;
 }
+
 .modal {
   display: none;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
-  border: 1px solid #ccc;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
+  background: #fff;
   padding: 20px;
-  width: 300px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
 .modal.show {
   display: block;
-  width: 50%;
 }
 
 .modal-backdrop {
@@ -179,34 +108,19 @@ input#withdraw:checked + label {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  z-index: 5;
 }
 
 .modal-backdrop.show {
   display: block;
 }
 
-/* Botões de rádio */
-.radio-input {
-  display: none;
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.radio-input + .btn {
-  padding: 10px 20px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-right: 5px;
-  
-}
-
-input#pix:checked + label {
-  background-color: #2563eb; /* Vermelho claro */
-  color: white; /* Vermelho escuro */
-  border-color:#1d4ed8; /* Vermelho forte */
-}
-input#Transferencia-Bancaria:checked + label {
-  background-color: #2563eb; /* Vermelho claro */
-  color: white; /* Vermelho escuro */
-  border-color:#1d4ed8; /* Vermelho forte */
+.modal-actions .btn {
+  flex: 1;
 }
