@@ -197,14 +197,15 @@ input#withdraw:checked + label {
   border: 1px solid #ccc;
   border-radius: 5px;
   margin-right: 5px;
-}
   
+}
+
 input#pix:checked + label {
   background-color: #2563eb; /* Vermelho claro */
   color: white; /* Vermelho escuro */
   border-color:#1d4ed8; /* Vermelho forte */
 }
-input#Conta-Bancaria:checked + label {
+input#Transferencia-Bancaria:checked + label {
   background-color: #2563eb; /* Vermelho claro */
   color: white; /* Vermelho escuro */
   border-color:#1d4ed8; /* Vermelho forte */
