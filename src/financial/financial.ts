@@ -24,6 +24,47 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
             accountNumber: number | undefined;
             pixKey: string | undefined;
         }
+
+        async function getWalletBalance(cpf: number) {
+            const connection = await DataBaseHandler.GetConnection();
+            try {
+                const balanceResult = await connection.execute(
+                    'SELECT BALANCE FROM WALLET WHERE CPF = :cpf',
+                    [cpf]
+                );
+    
+                const rows: any[][] = balanceResult.rows as any[][];
+    
+                if (rows.length > 0) {
+                    console.log( rows[0][0] );
+                    return Number(rows[0][0]);
+                } else {
+                    return 0;
+                }
+            } finally {
+                await connection.close();
+            }
+        }
+
+        export const getWalletBalanceHandler: RequestHandler = async (req: Request, res: Response) => {
+            try {
+                const cpfHeader = req.get('CPF') || '';
+                const pOwnerCPF = parseInt(cpfHeader, 10);
+        
+                if (isNaN(pOwnerCPF)) {
+                    res.status(400).json({ error: 'CPF deve ser um número válido.' }); // Use ` para evitar execução contínua.
+                }
+        
+                const balance = await getWalletBalance(pOwnerCPF);
+        
+                res.status(200).json({ balance }); // Envie como JSON para consistência.
+            } catch (error) {
+                console.error('Erro ao buscar saldo:', error);
+                res.status(500).json({ error: 'Erro interno ao processar a solicitação.' });
+            }
+        };
+        
+
         
         /* addFunds Funcionando */
         async function addFunds(wallet: AddFundsParams) {
@@ -216,4 +257,6 @@ import { AuthenticateTokenManager } from "../accounts/authenticateToken";
                 res.status(400).send("All required information must be provided.");
             }
         };
+
+        
     }

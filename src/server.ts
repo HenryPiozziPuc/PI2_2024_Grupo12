@@ -52,6 +52,9 @@ routes.post('/evaluateNewEvent', EventsManager.evaluateEventHandler);
 routes.put('/addFunds', FinancialManager.AddFundsHandler);
 routes.put('/withdrawFunds', FinancialManager.withdrawFundsHandler);
 
+// Wallet
+routes.get('/getWalletBalance', FinancialManager.getWalletBalanceHandler);
+
 server.use(routes);
 
 server.listen ( port, () => {

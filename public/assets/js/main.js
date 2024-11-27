@@ -318,3 +318,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
   
+// Verifica se o token existe no cookie
+const token = document.cookie.split(';').find(cookie => cookie.trim().startsWith('token='));
+
+if (token) {
+    // Exibe o cabeçalho para o usuário logado
+    document.getElementById('logged-header').style.display = 'block';
+    document.getElementById('guest-header').style.display = 'none';
+} else {
+    // Exibe o cabeçalho para o usuário não logado
+    document.getElementById('logged-header').style.display = 'none';
+    document.getElementById('guest-header').style.display = 'block';
+}

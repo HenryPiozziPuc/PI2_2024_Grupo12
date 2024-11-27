@@ -13,30 +13,47 @@
     <link rel="shortcut icon" href="assets/images/logo/logo-single.png" type="image/x-icon">
 </head>
 <body>
-  <!-- Header com a logo, menu de busca e botões de login e cadastro -->
-  <header>
-      <div class="container">
-          <nav class="padding-header navbar">
-              <div class="logo">
-                  <!-- Logo 
-                  <img src="assets/images/logo/logo-single.png" alt="Logo" srcset="">-->
-                  <img src="https://www.puc-campinas.edu.br/wp-content/uploads/2022/02/logo-puc-branco-2020.png" alt="Logo" srcset="">
-              </div>
-              <div class="d-flex row gap-10">
-                  <a href="#">
-                      <div class="btn login">
-                          Entrar
-                      </div>
-                  </a>
-                  <a href="#">
-                      <div class="btn signup">
-                          Cadastre-se
-                      </div>
-                  </a>
-              </div>
-          </nav>
-      </div>
+  <!-- Header para usuário não logado -->
+  <header id="guest-header" style="display:none;">
+    <div class="container">
+        <nav class="padding-header navbar">
+            <div class="logo">
+                <img src="https://www.puc-campinas.edu.br/wp-content/uploads/2022/02/logo-puc-branco-2020.png" alt="Logo">
+            </div>
+            <div class="d-flex row gap-10">
+                <a href="#">
+                    <div class="btn login">Entrar</div>
+                </a>
+                <a href="#">
+                    <div class="btn signup">Cadastre-se</div>
+                </a>
+            </div>
+        </nav>
+    </div>
   </header>
+
+  <!-- Header para usuário logado -->
+  <header id="logged-header" style="display:block;">
+    <div class="container">
+        <nav class="padding-header navbar">
+            <div class="logo">
+                <img src="https://www.puc-campinas.edu.br/wp-content/uploads/2022/02/logo-puc-branco-2020.png" alt="Logo">
+            </div>
+            <div class="d-flex row gap-10">
+                <div class="btn currency d-flex">
+                    <div>R$ 0,00</div>
+                    <div style="margin-left: 5px;">
+                        <img src="https://jonbet.com/static/media/BRL.d58b8dd8.svg" alt="">
+                    </div>
+                </div>
+                <a href="#">
+                    <div class="btn signup">Depositar</div>
+                </a>
+            </div>
+        </nav>
+    </div>
+  </header>
+
   <section id="welcome">
     <div class="container welcome-container">
       <div class="welcome-content">
