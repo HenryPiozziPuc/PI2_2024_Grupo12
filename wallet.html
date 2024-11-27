@@ -52,10 +52,12 @@
   <!-- Modal para Sacar -->
   <div id="modal-withdraw" class="modal">
     <p>Como deseja receber seu dinheiro?</p>
-    <input type="radio" id="pix" name="type-of-transaction" class="radio-input" checked>
+    <div class="button-group">
+    <input type="radio" id="pix" name="type-of-transaction" class="radio-input " checked>
     <label for="pix" class="btn">Pix</label>
-    <input type="radio" id="Conta-Bancaria" name="type-of-transaction" class="radio-input">
-    <label for="Conta-Bancaria" class="btn">Conta Bancária</label>
+    <input type="radio" id="Transferencia-Bancaria" name="type-of-transaction" class="radio-input">
+    <label for="Transferencia-Bancaria" class="btn">Transferência Bancária</label>
+  </div>
     <div>
       <label for="bank" class="label">Banco:</label>
       <input id="bank" class="input" type="text" placeholder="Banco do Brasil, Sicredi" required>
