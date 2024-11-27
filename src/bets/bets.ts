@@ -1,6 +1,8 @@
 import { Request, RequestHandler, Response } from "express";
 import { DataBaseHandler } from "../DB/connection";
 import { AuthenticateTokenManager } from "../accounts/authenticateToken";
+import { AccountsManager } from "../accounts/accounts";
+import { resourceLimits } from "worker_threads";
 
 /* Namespace contendo tudo sobre apostas */
 export namespace BetsManager {
@@ -195,30 +197,29 @@ export namespace BetsManager {
         }
     };
 
-    /* Função para buscar eventos com base em uma palavra-chave */
     async function searchEvents(params: EventSearchParams) {
         const connection = await DataBaseHandler.GetConnection();
         try {
             const { keyword } = params;
-
-            // Consulta SQL com LEFT JOIN e COUNT para contar as apostas
+    
+            // Alterando a consulta para aceitar dois parâmetros de bind
             const eventsResult = await connection.execute(
                 `SELECT E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, 
                         COUNT(B.ID) AS BET_COUNT
                 FROM EVENTS E
                 LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                WHERE LOWER(E.NAME) LIKE :keyword
+                WHERE LOWER(E.NAME) LIKE :keyword OR LOWER(E.CATEGORY) LIKE :keyword
                 GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
                 ORDER BY E.APPROVED DESC`, 
-                [`%${keyword.toLowerCase()}%`]
+                [`%${keyword.toLowerCase()}%`, `%${keyword.toLowerCase()}%`]  // Passando dois parâmetros
             );
 
             const events = eventsResult.rows as any[][];
-
+    
             if (events.length === 0) {
-                return "Nenhum evento encontrado.";
+                return "Nenhum evento encontrado."; // Caso não haja eventos, retorna uma mensagem
             }
-
+    
             return events.map(event => ({
                 id: event[0],                  // ID do evento
                 name: event[1],                // Nome do evento
@@ -232,22 +233,79 @@ export namespace BetsManager {
                 bet_count: event[9] ?? 0       // Contagem de apostas (com valor padrão 0 caso não haja apostas)
             }));
         } catch (error) {
-            return (error as Error).message;
+            console.error("Erro ao buscar eventos:", error);
+            throw error;
         } finally {
-            await connection.close();
+            await connection.close();  
         }
     }
+    
+    
 
     /* Handler para buscar eventos w/ Keyword */
     export const SearchEventHandler: RequestHandler = async (req: Request, res: Response) => {
         const keyword = req.get('keyword');
+    
+        console.log("Palavra-chave recebida:", keyword);  // Verifica o que está sendo enviado para o backend
+    
         if (!keyword) {
-            res.status(400).send("Palavra-chave é obrigatória.");
+            res.status(400).send("Palavra-chave é obrigatória."); // Envia o erro 400 caso não tenha palavra-chave
+            return;  // Finaliza a execução após enviar a resposta
+        }
+    
+        try {
+            const result = await searchEvents({ keyword });
+            res.status(200).send(result);  // Envia a resposta com os eventos encontrados
+        } catch (error) {
+            const errorAsError = error as Error;
+            console.error("Erro ao buscar eventos:", errorAsError);
+            res.status(500).json({
+                error: "Erro ao buscar eventos",
+                message: errorAsError.message || errorAsError.toString()  // Mensagem do erro
+            });
+        }
+    };
+    
+
+
+    /* Função para obter apostas */
+    async function GetBets(cpf: number) {
+        const connection = await DataBaseHandler.GetConnection();
+
+        try{
+            const betsResult = await connection.execute(
+                'SELECT E.NAME AS EVENT_NAME, B.BET_VALUE, B.CHOICE FROM BETS B JOIN EVENTS E ON B.ID_EVENTS = E.ID WHERE B.CPF = :cpf;',
+            [cpf]
+            );
+                
+            await connection.close();
+
+            console.log(betsResult.rows);
+
+            return betsResult;
+        }catch(error){
+            return (error as Error).message;
+        }finally {
+            await connection.close();
+        }
+    }
+
+    export const GetBetsHandler: RequestHandler = async (req: Request, res: Response) => {
+        const token = req.cookies.authToken;
+
+        if (!token) {
+            res.status(400).send("Sessão invalida");
             return;
         }
 
-        const result = await searchEvents({ keyword });
-        res.status(200).send(result);
+        const cpf = (await AccountsManager.GetCpfByToken(token)).cpf;
+        if(cpf){
+            const result = await GetBets(cpf);
+            res.status(200).send(result);
+        }else{
+            res.status(400);
+        }
+        
     };
 
 

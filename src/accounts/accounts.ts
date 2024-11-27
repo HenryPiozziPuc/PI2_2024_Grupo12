@@ -55,7 +55,6 @@ export namespace AccountsManager {
                 // Verifica se a senha armazenada corresponde à senha digitada
                 if (storedPassword === password) {
                     const token = await generateToken();
-
                     // Atualiza o token no banco de dados
                     await connection.execute(
                         'UPDATE ACCOUNTS SET TOKEN = :token WHERE EMAIL = :email',
@@ -66,7 +65,7 @@ export namespace AccountsManager {
                     await connection.commit();
                     return { success: true, message: `Login efetuado com sucesso. Seja bem-vindo, ${accountName}!`, token, role };
                 } else {
-                    return { success: false, message: 'Senha incorreta.' }; // Mensagem de erro se a senha estiver incorreta
+                    return { success: false, message: 'Senha incorreta. Tente novamente!' }; // Mensagem de erro se a senha estiver incorreta
                 }
             } else {
                 return { success: false, message: 'Nenhuma conta encontrada com esse email.' }; // Mensagem se não houver conta
@@ -83,33 +82,32 @@ export namespace AccountsManager {
     export const loginHandler: RequestHandler = async (req: Request, res: Response) => {
         const pEmail = req.get('email');
         const pPassword = req.get('password');
-
+    
         if (pEmail && pPassword) {
             const result = await login(pEmail, pPassword);
-
+    
             if (result.success) {
-                // Armazena o token e a role no cookie
-                res.cookie('authToken', result.token, {
-                    httpOnly: true, // O cookie não pode ser acessado pelo JavaScript no lado do cliente
-                    secure: false, // Somente HTTPS (ou true se você estiver em produção)
-                    maxAge: 3600000  // 10 Segundos | 1 hora = 3600000  
+                // Enviar o token e a role na resposta
+                res.status(200).json({
+                    success: true,
+                    message: result.message,
+                    token: result.token,  // Token do usuário
+                    role: result.role     // Role do usuário
                 });
-
-                res.cookie('userRole', result.role, {
-                    httpOnly: true, // O cookie não pode ser acessado pelo JavaScript no lado do cliente
-                    secure: false, // Somente HTTPS (ou true se você estiver em produção)
-                    maxAge: 3600000  // 10 Segundos | 1 hora = 3600000 
-                });
-
-                res.status(200).send(result.message);
-
+    
             } else {
-                res.status(result.message === 'Senha incorreta.' ? 401 : 404).send(result.message);
+                res.status(result.message === 'Senha incorreta.' ? 401 : 404).json({
+                    success: false,
+                    message: result.message
+                });
             }
         } else {
-            res.status(400).send("Parâmetros inválidos ou faltantes. Por favor, forneça um email e uma senha válidos.");
+            res.status(400).json({
+                success: false,
+                message: "Parâmetros inválidos ou faltantes. Por favor, forneça um email e uma senha válidos."
+            });
         }
-    };
+    }; 
 
     /* createWallet Funcionando */
     async function createWallet(account: UserAccount) {
@@ -195,6 +193,9 @@ export namespace AccountsManager {
             }
             const result = await signUp(newAccount);
 
+            // Enviar o token e a role na resposta
+            console.log(newAccount);
+
             if (result.success) {
                 // Cria carteira no Oracle Cloud
                 const walletResult = await createWallet(newAccount);
@@ -212,7 +213,7 @@ export namespace AccountsManager {
         }
     };
 
-    async function GetCpfByToken(token: string) {
+    export async function GetCpfByToken(token: string) {
         const connection = await DataBaseHandler.GetConnection();
     
         try {
@@ -220,14 +221,14 @@ export namespace AccountsManager {
                 'SELECT CPF FROM ACCOUNTS WHERE TOKEN = :token',
                 [token]
             );
-
+    
             const rows: any[][] = result.rows as any[][];
     
-            if (result.rows && result.rows.length > 0) {
-                const cpf = rows[0][0]; 
+            if (rows && rows.length > 0) {
+                const cpf = rows[0][0]; // O CPF do usuário associado ao token
                 return { success: true, message: 'Conta encontrada com sucesso', cpf };
             } else {
-                return { success: false, message: 'Conta invalida' };
+                return { success: false, message: 'Conta inválida' };
             }
         } catch (error) {
             console.log(error);
@@ -237,21 +238,21 @@ export namespace AccountsManager {
         }
     }
 
+    /* O Token vai vir do Front End que sera pego pelo Cookie Header */
     export const GetCpfByTokenHandler: RequestHandler = async (req: Request, res: Response) => {
-        const pToken = req.get('token') ;
-
+        // Token chega como parâmetro da chamada
+        const pToken = req.get('token');
+    
         if (pToken) {
-            
-            const result = await GetCpfByToken(pToken);
-            
+            const result = await GetCpfByToken(pToken); // Chamando a função para obter o CPF
+    
             if (result.success) {
-                res.status(200).send(result.cpf);
+                res.status(200).json({ cpf: result.cpf });
             } else {
-                res.status(400).send(result.message);
+                res.status(400).json({ message: result.message });
             }
-
         } else {
-            res.status(400).send("Parâmetros inválidos ou faltantes.");
+            res.status(400).json({ message: 'Parâmetros inválidos ou faltantes.' });
         }
     };
 
