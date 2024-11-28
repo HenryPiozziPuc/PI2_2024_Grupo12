@@ -213,6 +213,40 @@ export namespace AccountsManager {
         }
     };
 
+    async function logout(token: string) {
+        const connection = await DataBaseHandler.GetConnection();
+        try {
+            await connection.execute(
+                'UPDATE ACCOUNTS SET TOKEN = NULL WHERE TOKEN = :token',
+                [token]
+            );
+            await connection.commit();
+            return { success: true, message: 'Logout realizado com sucesso.' };
+        } catch (error) {
+            console.log(error);
+            return { success: false, message: 'Erro ao realizar logout.' };
+        } finally {
+            await connection.close();
+        }
+    }
+    
+    /* Logout Handler */
+    export const LogoutHandler: RequestHandler = async (req: Request, res: Response) => {
+        const token = req.get('token'); // Recupera o token do cabeçalho
+    
+        if (token) {
+            const result = await logout(token);
+    
+            if (result.success) {
+                res.status(200).json(result); // Retorna um JSON com o resultado
+            } else {
+                res.status(400).json(result); // Retorna um JSON com o erro
+            }
+        } else {
+            res.status(400).json({ success: false, message: 'Parâmetros inválidos ou faltantes.' });
+        }
+    };
+
     export async function GetCpfByToken(token: string) {
         const connection = await DataBaseHandler.GetConnection();
     

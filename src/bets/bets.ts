@@ -245,8 +245,6 @@ export namespace BetsManager {
     export const SearchEventHandler: RequestHandler = async (req: Request, res: Response) => {
         const keyword = req.get('keyword');
     
-        console.log("Palavra-chave recebida:", keyword);  // Verifica o que está sendo enviado para o backend
-    
         if (!keyword) {
             res.status(400).send("Palavra-chave é obrigatória."); // Envia o erro 400 caso não tenha palavra-chave
             return;  // Finaliza a execução após enviar a resposta

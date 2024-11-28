@@ -21,6 +21,7 @@ routes.get('/', (req: Request, res: Response) => {
 // Accounts
 routes.post('/login', AccountsManager.loginHandler);
 routes.post('/signUp', AccountsManager.SignUpHandler);
+routes.put('/logout', AccountsManager.LogoutHandler);
 
 // Bets
 routes.post('/betOnEvent', BetsManager.BetOnEventHandler);

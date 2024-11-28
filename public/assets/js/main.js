@@ -721,3 +721,44 @@ document.getElementById('SignUpForm').addEventListener('submit', async function 
 document.getElementById('signUpModal').addEventListener('show', () => {
   document.getElementById('SignUpForm').reset();
 });
+
+
+
+/* Logout Fetch Requisition */
+
+// Adicionando evento de clique no botão
+document.getElementById('logoutButton').addEventListener('click', async (event) => {
+  event.preventDefault(); // Previne o comportamento padrão do link
+  
+  // Supondo que o token esteja armazenado no localStorage
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    alert('Usuário não autenticado.');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:3000/logout', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': token
+      }
+    });
+
+    const message = await response.json();
+
+    if (response.ok) {
+      alert(message.message);
+      // Limpando o localStorage
+      localStorage.clear();
+      location.reload();
+    } else {
+      const errorMessage = await response.text();
+      alert(`Erro ao fazer logout: ${errorMessage}`);
+    }
+  } catch (error) {
+    console.error('Erro na solicitação de logout:', error);
+    alert('Erro ao conectar ao servidor.');
+  }
+});
