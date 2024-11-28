@@ -464,6 +464,12 @@ h6 {
     text-align: right;
 }
 
+.btn.logout {
+    background: red;
+    color: white;
+    border: 1px solid red;
+}
+
 .logo img {
     width: 6rem;
 }
@@ -944,4 +950,53 @@ input {
     width: 20px;
     height: 20px;
     margin-left: 8px;
+}
+
+
+.input-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.input {
+display: flex;
+align-items: center;
+gap: 5px;
+}
+
+input[type="radio"] {
+accent-color: #000000; /* Ajuste da cor para um azul claro */
+width: 16px;
+height: 16px;
+cursor: pointer;
+}
+
+label {
+font-size: 1rem;
+cursor: pointer;
+}
+
+label:hover {
+text-decoration: underline;
+}
+
+.event-description {
+    border: 1px solid #ffffff29;
+    border-left: 0;
+    border-right: 0;
+    margin-bottom: 26px;
+}
+
+.event-description p {
+    padding: 20px 0;
+    margin: 0;
+}
+
+.event-description.two {
+    border-top: 0;
+}
+
+.event-description.two p {
+    padding: 0 0 26px;
 }

@@ -1,4 +1,4 @@
-import {Request, RequestHandler, Response} from "express";
+import { Request, RequestHandler, Response } from "express";
 import { DataBaseHandler } from "../DB/connection";
 import { AuthenticateTokenManager } from "../accounts/authenticateToken";
 
@@ -13,11 +13,11 @@ export namespace FinancialManager {
         expiryDate: string;
         cvv: string;
     }
-    
+
     type WithdrawFundsParams = {
         ownerCPF: number | undefined;
         amountWithdraw: number;
-        withdrawMethod:string;
+        withdrawMethod: string;
         bank: string | undefined;
         agency: number | undefined;
         accountNumber: number | undefined;
@@ -26,38 +26,38 @@ export namespace FinancialManager {
 
     export async function getWalletBalance(token: string) {
         const connection = await DataBaseHandler.GetConnection();
-    
+
         try {
             // Verificar se o token existe e pegar o CPF do usuário
             const result = await connection.execute(
                 'SELECT CPF FROM ACCOUNTS WHERE TOKEN = :token',
                 [token]
             );
-    
+
             const rows: any[][] = result.rows as any[][];
-    
+
             if (rows.length === 0) {
                 return { success: false, message: 'Token inválido ou expirado.' };
             }
-    
+
             const cpf = rows[0][0]; // O CPF do usuário associado ao token
-    
+
             // Agora, buscar o saldo na tabela de WALLET
             const walletResult = await connection.execute(
                 'SELECT BALANCE FROM WALLET WHERE CPF = :cpf',
                 [cpf]
             );
-    
+
             const walletRows: any[][] = walletResult.rows as any[][];
-    
+
             if (walletRows.length === 0) {
                 return { success: false, message: 'Carteira não encontrada.' };
             }
-    
+
             const balance = walletRows[0][0]; // O saldo da carteira do usuário
-    
+
             return { success: true, balance: balance };
-    
+
         } catch (error) {
             console.error('Erro ao recuperar o saldo:', error);
             return { success: false, message: 'Erro ao processar a requisição.' };
@@ -65,13 +65,13 @@ export namespace FinancialManager {
             await connection.close();
         }
     }
-    
+
     export const getWalletBalanceHandler: RequestHandler = async (req: Request, res: Response) => {
         const pToken = req.get('token'); // Pegando o token do cabeçalho 'Authorization'
-    
+
         if (pToken) {
             const result = await getWalletBalance(pToken); // Chamando a função para obter o saldo
-    
+
             if (result.success) {
                 res.status(200).json({ balance: result.balance });
             } else {
@@ -81,7 +81,7 @@ export namespace FinancialManager {
             res.status(400).json({ message: 'Parâmetros inválidos ou faltantes.' });
         }
     };
-    
+
     /* addFunds Funcionando */
     async function addFunds(wallet: AddFundsParams) {
 
@@ -96,7 +96,7 @@ export namespace FinancialManager {
             let newBalance = 0;
 
             if (rows.length > 0) {
-                const balance =  Number(rows[0][0]);
+                const balance = Number(rows[0][0]);
                 newBalance = balance + wallet.amountAdd;
             } else {
                 return 'Carteira não encontrada, tente novamente.'
@@ -114,10 +114,10 @@ export namespace FinancialManager {
         } finally {
             await connection.close();
         }
-        
+
         return 'Fundo adicionado com sucesso';
     };
-    
+
     /* addFundsHandler Funcionando */
     export const AddFundsHandler: RequestHandler = async (req: Request, res: Response) => {
 
@@ -158,7 +158,8 @@ export namespace FinancialManager {
         }
         return 0; // Isento para valores acima de R$ 101.000
     }
-    
+
+    /* withdrawFunds Funcionando */
     /* withdrawFunds Funcionando */
     async function withdrawFunds(wallet: WithdrawFundsParams) {
         const connection = await DataBaseHandler.GetConnection();
@@ -169,28 +170,26 @@ export namespace FinancialManager {
             );
 
             const rows: any[][] = balanceResult.rows as any[][];
-            const withdrawFee = calculateWithdrawFee(wallet.amountWithdraw);//calculando taxa
+            const withdrawFee = calculateWithdrawFee(wallet.amountWithdraw); // Calculando taxa
             let newBalance = 0;
 
             if (rows.length > 0) {
-
                 // Verificando o valor do amountWithdraw
                 if (wallet.amountWithdraw <= 0) {
-                    return 'Valor inválido, digite um valor maior que 0.';
+                    return { success: false, message: 'Valor inválido, digite um valor maior que 0.' };
                 }
-                
-                const balance =  Number(rows[0][0]);
-                const totalWithdraw = wallet.amountWithdraw + withdrawFee;//somando taxa com saque
-                
+
+                const balance = Number(rows[0][0]);
+                const totalWithdraw = wallet.amountWithdraw + withdrawFee; // Somando taxa com saque
+
                 // Verificando a WalletBalance e o amountWithdraw
                 if (totalWithdraw > balance) {
-                    return `Saldo insuficiente. Taxa de saque: R$ ${withdrawFee.toFixed(2)}. Tente novamente.`;
+                    return { success: false, message: `Saldo insuficiente. Taxa de saque: R$ ${withdrawFee.toFixed(2)}. Tente novamente.` };
                 }
-                
-                newBalance = balance - totalWithdraw;
 
+                newBalance = balance - totalWithdraw;
             } else {
-                return 'Carteira não encontrada, tente novamente.'
+                return { success: false, message: 'Carteira não encontrada, tente novamente.' };
             }
 
             await connection.execute(
@@ -200,30 +199,28 @@ export namespace FinancialManager {
 
             await connection.commit();
 
-            return `Saldo retirado com sucesso! Taxa cobrada: R$ ${withdrawFee.toFixed(2)}. Seu novo saldo é ${newBalance}`;
+            return { success: true, message: `Saldo retirado com sucesso! Taxa cobrada: R$ ${withdrawFee.toFixed(2)}. Seu novo saldo é ${newBalance}` };
 
         } catch (error) {
             await connection.rollback();
-            return (error as Error).message;
+            return { success: false, message: (error as Error).message };
         } finally {
             await connection.close();
         }
-        
-        
     };
 
+
+    /* withdrawFundsHandler Funcionando */
     /* withdrawFundsHandler Funcionando */
     export const withdrawFundsHandler: RequestHandler = async (req: Request, res: Response) => {
-
         let pBank, pAgency, pAccountNumber, pPixKey;
 
         const pOwnerCPF = parseInt(req.get('CPF') || '', 10);
         const pAmountWithdraw = parseFloat(req.get('AmountWithdraw') || '0');
         const pWithdrawMethod = req.get('paymentMethod');
-        
+
         if (!pWithdrawMethod) {
-            res.status(400).send("Withdraw Method is required.");
-            return;
+            res.status(400).json({ success: false, message: "Withdraw Method is required." });
         }
 
         if (pWithdrawMethod === 'accountBank') {
@@ -233,8 +230,7 @@ export namespace FinancialManager {
         } else if (pWithdrawMethod === 'pix') {
             pPixKey = req.get('pixKey');
         } else {
-            res.status(400).send("Withdraw Method is invalid.");
-            return;
+            res.status(400).json({ success: false, message: "Withdraw Method is invalid." });
         }
 
         if (pOwnerCPF && pAmountWithdraw && pWithdrawMethod && pBank && pAgency && pAccountNumber) {
@@ -248,7 +244,7 @@ export namespace FinancialManager {
                 pixKey: undefined
             };
             const result = await withdrawFunds(withdrawFundsParams);
-            res.status(200).send(result);
+            res.status(result.success ? 200 : 400).json(result);
         } else if (pOwnerCPF && pAmountWithdraw && pWithdrawMethod && pPixKey) {
             const withdrawFundsParams: WithdrawFundsParams = {
                 ownerCPF: pOwnerCPF,
@@ -260,11 +256,10 @@ export namespace FinancialManager {
                 pixKey: pPixKey
             };
             const result = await withdrawFunds(withdrawFundsParams);
-            res.status(200).send(result);
+            res.status(result.success ? 200 : 400).json(result);
         } else {
-            res.status(400).send("All required information must be provided.");
+            res.status(400).json({ success: false, message: "All required information must be provided." });
         }
     };
 
-    
 }

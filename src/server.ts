@@ -26,6 +26,7 @@ routes.post('/signUp', AccountsManager.SignUpHandler);
 routes.post('/betOnEvent', BetsManager.BetOnEventHandler);
 routes.post('/finishEvent', BetsManager.FinishEventHandler);
 routes.get('/searchEvent', BetsManager.SearchEventHandler);
+routes.get('/getBets', BetsManager.GetBetsHandler);
 
 // Events
 routes.put('/addNewEvent', EventsManager.addNewEventHandler);

@@ -8,6 +8,7 @@ export namespace EventsManager {
     // Type para representar um evento
     export type Event = {
         name: string,
+        description: string, // Adicionada esta linha
         category: string,
         quota: number,
         start_date: Date,
@@ -15,7 +16,7 @@ export namespace EventsManager {
         approved: number,
         status_event: number,
         creator_CPF: number
-    };
+    };    
 
     type EventRow = [string, string, number, Date, Date, number, number, number];
     
@@ -24,9 +25,9 @@ export namespace EventsManager {
         const connection = await DataBaseHandler.GetConnection();
         try {
             await connection.execute(
-                'INSERT INTO EVENTS (ID, NAME, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF) VALUES(SEQ_EVENTS.NEXTVAL, :name,:category,:quota,:start_date,:end_date,:approved,:status_event,:creator_CPF)',
-                [event.name, event.category, event.quota, event.start_date, event.end_date, event.approved, event.status_event, event.creator_CPF]
-            );
+                'INSERT INTO EVENTS (ID, NAME, DESCRICAO, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF) VALUES(SEQ_EVENTS.NEXTVAL, :name, :description, :category, :quota, :start_date, :end_date, :approved, :status_event, :creator_CPF)',
+                [event.name, event.description, event.category, event.quota, event.start_date, event.end_date, event.approved, event.status_event, event.creator_CPF]
+            );            
             await connection.commit();
             return { success: true, message: 'Evento criado com sucesso. Em Breve um moderador irá aprovar seu evento!' };
         } catch (error) {
@@ -52,29 +53,31 @@ export namespace EventsManager {
     /* AddNewEventHandler Funcionando */
     export const addNewEventHandler: RequestHandler = async (req: Request, res: Response) =>{
         const pName = req.get('name');
+        const pDescription = req.get('description');
         const pCategory = req.get('category');
         const pQuota = parseInt(req.get('quota') || '');
         const pStart_date = req.get('start_date');
         const pEnd_date = req.get('end_date');
         const pCreator_CPF = parseInt(req.get('creator_CPF') || '');
 
-        if(pName && pCategory && !isNaN(pQuota) && pStart_date && pEnd_date && !isNaN(pCreator_CPF)){
-
-             // Verifica se a data de início é válida (não está no passado)
+        if (pName && pDescription && pCategory && !isNaN(pQuota) && pStart_date && pEnd_date && !isNaN(pCreator_CPF)) {
+            // Verifica se a data de início é válida (não está no passado)
             if (!isDateInFuture(pStart_date)) {
                 res.status(400).send("A data de início do evento não pode estar no passado.");
                 return;
             }
+
             const newEvent: Event = {
                 name: pName,
+                description: pDescription, // Adicionado aqui
                 category: pCategory,
                 quota: pQuota,
                 start_date: new Date(pStart_date),
-                end_date: new Date (pEnd_date),
+                end_date: new Date(pEnd_date),
                 approved: 0,
                 status_event: 1,
                 creator_CPF: pCreator_CPF
-            }
+            };
 
             const result = await addNewEvent(newEvent);
 
@@ -93,7 +96,7 @@ export namespace EventsManager {
         const connection = await DataBaseHandler.GetConnection();
 
         try {
-            let query = 'SELECT * FROM EVENTS';
+            let query = 'SELECT ID, NAME, DESCRICAO, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF FROM EVENTS';
             let conditions: string[] = [];
             let parameters: Record<string, any> = {};
 
@@ -103,31 +106,30 @@ export namespace EventsManager {
                     break;
 
                 case 'mais_apostas': // Eventos com mais apostas
-                    query = `
-                        SELECT E.*, COUNT(B.ID) AS BET_COUNT
-                        FROM EVENTS E
-                        LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                        WHERE E.APPROVED = 1
-                        GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                        HAVING COUNT(B.ID) > 0
-                        ORDER BY BET_COUNT DESC `;
+                    query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
+                                FROM EVENTS E
+                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                                WHERE E.APPROVED = 1
+                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                                HAVING COUNT(B.ID) > 0
+                                ORDER BY BET_COUNT DESC`;            
                     break;
 
                 case 'agrupados_por_categoria': // Eventos completos agrupados por categoria
-                    query = `SELECT E.*, COUNT(B.ID) AS BET_COUNT
-                        FROM EVENTS E
-                        LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                        WHERE E.APPROVED = 1
-                        GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                        ORDER BY E.CATEGORY ASC, E.NAME ASC`;
+                    query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
+                                FROM EVENTS E
+                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                                WHERE E.APPROVED = 1
+                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                                ORDER BY E.CATEGORY ASC, E.NAME ASC`;
                     break;
                 
                 case 'all_events': // Todos os eventos aprovados
-                    query = `SELECT E.*, COUNT(B.ID) AS BET_COUNT
-                    FROM EVENTS E
-                    LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                    GROUP BY E.ID, E.NAME, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                    ORDER BY E.APPROVED DESC`;       
+                    query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
+                                FROM EVENTS E
+                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                                ORDER BY E.APPROVED DESC`;       
                     break;
 
                 default:
@@ -143,14 +145,15 @@ export namespace EventsManager {
             const events = result.rows?.map(row => ({
                 id: row[0],
                 name: row[1],
-                category: row[2],
-                quota: row[3],
-                start_date: row[4],
-                end_date: row[5],
-                approved: row[6],
-                status_event: row[7],
-                creator_CPF: row[8],
-                bet_count: filter === 'mais_apostas' || filter === 'all_events' || filter === 'agrupados_por_categoria' ? row[9] : null // Contagem de apostas
+                description: row[2], // Adicionado aqui
+                category: row[3],
+                quota: row[4],
+                start_date: row[5],
+                end_date: row[6],
+                approved: row[7],
+                status_event: row[8],
+                creator_CPF: row[9],
+                bet_count: filter === 'mais_apostas' || filter === 'all_events' || filter === 'agrupados_por_categoria' ? row[10] : null // Contagem de apostas
             })) || [];
 
             return { success: true, events };

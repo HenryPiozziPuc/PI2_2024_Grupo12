@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Site de Apostas | Pontifícia Universidade Católica de Campinas</title>
-    <meta name="description" content="Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site de Apostas | Pontifícia Universidade Católica de Campinas</title>
+  <meta name="description"
+    content="Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras.">
 
-    <!-- CSS-->
-    <link rel="stylesheet" href="assets/css/style.css">
+  <!-- CSS-->
+  <link rel="stylesheet" href="assets/css/style.css">
 
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="assets/images/logo/logo-single.png" type="image/x-icon">
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="assets/images/logo/logo-single.png" type="image/x-icon">
 </head>
+
 <body>
   <div class="preloader-overlay" id="preloader">
     <div class="preloader-content">
@@ -27,7 +30,7 @@
         <div class="text">Loading...</div>
       </div>
     </div>
-  </div>  
+  </div>
   <script>
     // Ocultar o preloader após 2 segundos do carregamento
     window.addEventListener('load', () => {
@@ -37,116 +40,135 @@
       }, 2000);
     });
   </script>
-  
-<!-- Header caso o usuário não esteja logado -->
-<header id="header-logged-out">
-  <div class="container">
-      <nav class="padding-header navbar">
-          <div class="logo">
-              <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
-          </div>
-          <div class="d-flex row gap-10">
-              <a id="openModalSignIn" class="modal-btn-SignIn">
-                  <div class="btn login">Entrar</div>
-              </a>
-              <a id="openModalSignUp" class="modal-btn-SignUp">
-                <div class="btn signup">Cadastre-se</div>
-              </a>
-          </div>
-      </nav>
-  </div>
-</header>
 
-<!-- Header caso o usuário esteja logado -->
-<header id="header-logged-in" style="display: none;">
-  <div class="container">
+  <!-- Header caso o usuário não esteja logado -->
+  <header id="header-logged-out">
+    <div class="container">
       <nav class="padding-header navbar">
-          <div class="logo">
-              <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
-          </div>
-          <div class="d-flex row gap-10">
-              <div id="balance-display" class="btn currency d-flex">
-                  <div id="balance-amount"></div>
-                  <div style="margin-left: 5px;">
-                      <img src="https://jonbet.com/static/media/BRL.d58b8dd8.svg" alt="">
-                  </div>
-              </div>
-              <a href="#">
-                  <div class="btn signup">Carteira</div>
-              </a>
-          </div>
+        <div class="logo">
+          <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
+        </div>
+        <div class="d-flex row gap-10">
+          <a id="openModalSignIn" class="modal-btn-SignIn">
+            <div class="btn login">Entrar</div>
+          </a>
+          <a id="openModalSignUp" class="modal-btn-SignUp">
+            <div class="btn signup">Cadastre-se</div>
+          </a>
+        </div>
       </nav>
-  </div>
-</header>
+    </div>
+  </header>
 
-<section id="welcome">
-  <div class="container welcome-container">
-    <div class="welcome-content">
+  <!-- Header caso o usuário esteja logado -->
+  <header id="header-logged-in" style="display: none;">
+    <div class="container">
+      <nav class="padding-header navbar">
+        <div class="logo">
+          <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
+        </div>
+        <div class="d-flex row gap-10">
+          <div id="balance-display" class="btn currency d-flex">
+            <div id="balance-amount"></div>
+            <div style="margin-left: 5px;">
+              <img src="https://jonbet.com/static/media/BRL.d58b8dd8.svg" alt="">
+            </div>
+          </div>
+          <a href="carteira/">
+            <div class="btn signup">Carteira</div>
+          </a>
+          <a href="#">
+            <div class="btn logout">Sair</div>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <section id="welcome">
+    <div class="container welcome-container">
+      <div class="welcome-content">
         <!-- Título de boas-vindas -->
         <div class="welcome-title">
-            <span id="welcome-message">Welcome to PUC BET!</span>
-            <!-- O nome do usuário será inserido aqui -->
-            <span id="user-name"></span>
+          <div id="welcome-message">Welcome to PUC BET!</div>
         </div>
-        
+
         <!-- Subtítulo explicativo -->
         <div class="welcome-subtitle">Faça seu cadastro, deposite qualquer valor e começe a apostar!</div>
-        
+
         <!-- Etapas do processo -->
         <div class="steps-container">
-            <!-- Etapa 1: Cadastro -->
-            <div class="step-description">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g clip-path="url(#clip0_21543_2641)">
-                        <path d="M7 14C7 12.469 7.578 11.076 8.522 10.016C8.348 10.011 8.18 10 8 10C4.808 10 2.461 10.795 1.163 11.382C0.45 11.705 0 12.417 0 13.2V16H7.349C7.127 15.374 7 14.702 7 14Z" fill="#8C9099"></path>
-                        <path d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z" fill="#8C9099"></path>
-                        <path d="M11 16C10.744 16 10.488 15.902 10.293 15.707L8.29297 13.707L9.70697 12.293L11 13.586L14.293 10.293L15.707 11.707L11.707 15.707C11.512 15.902 11.256 16 11 16Z" fill="#8C9099"></path>
-                    </g>
-                    <defs>
-                        <clipPath id="clip0_21543_2641">
-                            <rect width="16" height="16" fill="white"></rect>
-                        </clipPath>
-                    </defs>
-                </svg>
-                <div class="step-text">Cadastre-se</div>
-            </div>
-            
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8.54922 5.99981L5.77422 8.7748C5.48427 9.06475 5.01417 9.06475 4.72422 8.7748C4.43427 8.48486 4.43427 8.01475 4.72422 7.7248L6.44922 5.99981L4.72422 4.27481C4.43427 3.98486 4.43427 3.51476 4.72422 3.22481C5.01417 2.93486 5.48427 2.93486 5.77422 3.22481L8.54922 5.99981Z" fill="rgb(255, 255, 255)"></path>
+          <!-- Etapa 1: Cadastro -->
+          <div class="step-description">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clip-path="url(#clip0_21543_2641)">
+                <path
+                  d="M7 14C7 12.469 7.578 11.076 8.522 10.016C8.348 10.011 8.18 10 8 10C4.808 10 2.461 10.795 1.163 11.382C0.45 11.705 0 12.417 0 13.2V16H7.349C7.127 15.374 7 14.702 7 14Z"
+                  fill="#8C9099"></path>
+                <path
+                  d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z"
+                  fill="#8C9099"></path>
+                <path
+                  d="M11 16C10.744 16 10.488 15.902 10.293 15.707L8.29297 13.707L9.70697 12.293L11 13.586L14.293 10.293L15.707 11.707L11.707 15.707C11.512 15.902 11.256 16 11 16Z"
+                  fill="#8C9099"></path>
+              </g>
+              <defs>
+                <clipPath id="clip0_21543_2641">
+                  <rect width="16" height="16" fill="white"></rect>
+                </clipPath>
+              </defs>
             </svg>
+            <div class="step-text">Cadastre-se</div>
+          </div>
 
-            <!-- Etapa 2: Adicionar fundos -->
-            <div class="step-description">
-                <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.40086 3.84C2.92662 3.84 0.920859 2.98039 0.920859 1.92C0.920859 0.859613 2.92662 0 5.40086 0C7.8751 0 9.88086 0.859613 9.88086 1.92C9.88086 2.98039 7.8751 3.84 5.40086 3.84Z" fill="#8C9099"></path>
-                    <path d="M10.52 10.8799C12.4086 10.8799 13.9779 10.4709 15 9.78418V10.8799C15 11.9403 12.9942 12.7999 10.52 12.7999C8.04576 12.7999 6.04 11.9403 6.04 10.8799V9.78418C7.06208 10.4709 8.63136 10.8799 10.52 10.8799Z" fill="#8C9099"></path>
-                    <path d="M10.52 14.0801C12.4086 14.0801 13.9779 13.6711 15 12.9844V14.0801C15 15.1405 12.9942 16.0001 10.52 16.0001C8.04576 16.0001 6.04 15.1405 6.04 14.0801V12.9844C7.06208 13.6711 8.63136 14.0801 10.52 14.0801Z" fill="#8C9099"></path>
-                </svg>
-                <div class="step-text">Adicione fundos</div>
-            </div>
-            
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8.54922 5.99981L5.77422 8.7748C5.48427 9.06475 5.01417 9.06475 4.72422 8.7748C4.43427 8.48486 4.43427 8.01475 4.72422 7.7248L6.44922 5.99981L4.72422 4.27481C4.43427 3.98486 4.43427 3.51476 4.72422 3.22481C5.01417 2.93486 5.48427 2.93486 5.77422 3.22481L8.54922 5.99981Z" fill="rgb(255, 255, 255)"></path>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M8.54922 5.99981L5.77422 8.7748C5.48427 9.06475 5.01417 9.06475 4.72422 8.7748C4.43427 8.48486 4.43427 8.01475 4.72422 7.7248L6.44922 5.99981L4.72422 4.27481C4.43427 3.98486 4.43427 3.51476 4.72422 3.22481C5.01417 2.93486 5.48427 2.93486 5.77422 3.22481L8.54922 5.99981Z"
+              fill="rgb(255, 255, 255)"></path>
+          </svg>
+
+          <!-- Etapa 2: Adicionar fundos -->
+          <div class="step-description">
+            <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M5.40086 3.84C2.92662 3.84 0.920859 2.98039 0.920859 1.92C0.920859 0.859613 2.92662 0 5.40086 0C7.8751 0 9.88086 0.859613 9.88086 1.92C9.88086 2.98039 7.8751 3.84 5.40086 3.84Z"
+                fill="#8C9099"></path>
+              <path
+                d="M10.52 10.8799C12.4086 10.8799 13.9779 10.4709 15 9.78418V10.8799C15 11.9403 12.9942 12.7999 10.52 12.7999C8.04576 12.7999 6.04 11.9403 6.04 10.8799V9.78418C7.06208 10.4709 8.63136 10.8799 10.52 10.8799Z"
+                fill="#8C9099"></path>
+              <path
+                d="M10.52 14.0801C12.4086 14.0801 13.9779 13.6711 15 12.9844V14.0801C15 15.1405 12.9942 16.0001 10.52 16.0001C8.04576 16.0001 6.04 15.1405 6.04 14.0801V12.9844C7.06208 13.6711 8.63136 14.0801 10.52 14.0801Z"
+                fill="#8C9099"></path>
             </svg>
+            <div class="step-text">Adicione fundos</div>
+          </div>
 
-            <!-- Etapa 3: Apostar -->
-            <div class="step-description">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 0C6.41775 0 4.87103 0.469192 3.55544 1.34824C2.23985 2.22729 1.21447 3.47672 0.608967 4.93853C0.00346625 6.40034 -0.15496 8.00887 0.153721 9.56072C0.462403 11.1126 1.22433 12.538 2.34315 13.6569C3.46197 14.7757 4.88743 15.5376 6.43928 15.8463C7.99113 16.155 9.59966 15.9965 11.0615 15.391C12.5233 14.7855 13.7727 13.7602 14.6518 12.4446C15.5308 11.129 16 9.58225 16 8C16 5.87827 15.1571 3.84344 13.6569 2.34315C12.1566 0.842855 10.1217 0 8 0ZM10.629 11.618L8 10.236L5.371 11.618L5.871 8.691L3.747 6.618L6.686 6.191L8 3.528L9.314 6.191L12.253 6.618L10.127 8.691L10.629 11.618Z" fill="#8C9099"></path>
-                </svg>
-                <div class="step-text">Aposte!</div>
-            </div>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M8.54922 5.99981L5.77422 8.7748C5.48427 9.06475 5.01417 9.06475 4.72422 8.7748C4.43427 8.48486 4.43427 8.01475 4.72422 7.7248L6.44922 5.99981L4.72422 4.27481C4.43427 3.98486 4.43427 3.51476 4.72422 3.22481C5.01417 2.93486 5.48427 2.93486 5.77422 3.22481L8.54922 5.99981Z"
+              fill="rgb(255, 255, 255)"></path>
+          </svg>
+
+          <!-- Etapa 3: Apostar -->
+          <div class="step-description">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M8 0C6.41775 0 4.87103 0.469192 3.55544 1.34824C2.23985 2.22729 1.21447 3.47672 0.608967 4.93853C0.00346625 6.40034 -0.15496 8.00887 0.153721 9.56072C0.462403 11.1126 1.22433 12.538 2.34315 13.6569C3.46197 14.7757 4.88743 15.5376 6.43928 15.8463C7.99113 16.155 9.59966 15.9965 11.0615 15.391C12.5233 14.7855 13.7727 13.7602 14.6518 12.4446C15.5308 11.129 16 9.58225 16 8C16 5.87827 15.1571 3.84344 13.6569 2.34315C12.1566 0.842855 10.1217 0 8 0ZM10.629 11.618L8 10.236L5.371 11.618L5.871 8.691L3.747 6.618L6.686 6.191L8 3.528L9.314 6.191L12.253 6.618L10.127 8.691L10.629 11.618Z"
+                fill="#8C9099"></path>
+            </svg>
+            <div class="step-text">Aposte!</div>
+          </div>
         </div>
 
         <!-- Botão de cadastro -->
         <a href="#">
-            <div class="btn signup" id="signup-button">Cadastre-se</div>
+          <div class="btn signup" id="signup-button">Cadastre-se</div>
         </a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-  
+
   <section id="search-event">
     <div class="container pd-0">
       <div class="title">
@@ -161,7 +183,7 @@
       </div>
     </div>
   </section>
-  
+
   <section id="all-events">
     <div class="container">
       <div class="d-flex row justify-between mb-15">
@@ -177,102 +199,102 @@
           <div class="category-list">
             <div class="category-item-wrapper" style="height: 33px;">
               <div class="category-item" style="height: 33px;">
-                  <div class="category-buttons">
-                    <div class="category-button active">
-                      <div class="button-text">Eventos esportivos</div>
-                    </div>
-                    <div class="category-button inactive">
-                      <div class="button-text">Eventos Políticos</div>
-                    </div>
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
                   </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <!-- Os eventos serão exibidos aqui -->
-      <div class="cards-container" id="events-container-all"></div>    
+      <div class="cards-container" id="events-container-all"></div>
     </div>
   </section>
   <section id="events-mais-apostados">
     <div class="container">
       <div class="title">
-        🔥  Eventos mais apostados
+        🔥 Eventos mais apostados
       </div>
       <div class="category-wrapper">
         <div class="categories" style="overflow: visible;">
           <div class="category-list">
             <div class="category-item-wrapper" style="height: 33px;">
               <div class="category-item" style="height: 33px;">
-                  <div class="category-buttons">
-                    <div class="category-button active">
-                      <div class="button-text">Eventos esportivos</div>
-                    </div>
-                    <div class="category-button inactive">
-                      <div class="button-text">Eventos Políticos</div>
-                    </div>
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
                   </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <!-- Os eventos serão exibidos aqui -->
-      <div class="cards-container" id="events-container-bets"></div>   
+      <div class="cards-container" id="events-container-bets"></div>
     </div>
   </section>
   <section id="events-proximos-de-vencer">
     <div class="container">
       <div class="title">
-        ⏳  Eventos próximos de vencerem
+        ⏳ Eventos próximos de vencerem
       </div>
       <div class="category-wrapper">
         <div class="categories" style="overflow: visible;">
           <div class="category-list">
             <div class="category-item-wrapper" style="height: 33px;">
               <div class="category-item" style="height: 33px;">
-                  <div class="category-buttons">
-                    <div class="category-button active">
-                      <div class="button-text">Eventos esportivos</div>
-                    </div>
-                    <div class="category-button inactive">
-                      <div class="button-text">Eventos Políticos</div>
-                    </div>
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
                   </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <!-- Os eventos serão exibidos aqui -->
-      <div class="cards-container" id="events-container-finishing"></div>    
+      <div class="cards-container" id="events-container-finishing"></div>
     </div>
   </section>
   <section id="categorias-especificas">
     <div class="container">
       <div class="title">
-        🔠  Categorias especificas de eventos
+        🔠 Categorias especificas de eventos
       </div>
       <div class="category-wrapper">
         <div class="categories" style="overflow: visible;">
           <div class="category-list">
             <div class="category-item-wrapper" style="height: 33px;">
               <div class="category-item" style="height: 33px;">
-                  <div class="category-buttons">
-                    <div class="category-button active">
-                      <div class="button-text">Eventos esportivos</div>
-                    </div>
-                    <div class="category-button inactive">
-                      <div class="button-text">Eventos Políticos</div>
-                    </div>
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
                   </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <!-- Os eventos serão exibidos aqui -->
-      <div class="cards-container" id="events-container-category"></div>   
+      <div class="cards-container" id="events-container-category"></div>
     </div>
   </section>
   <footer style="min-height: 10vw;">
@@ -282,7 +304,11 @@
           <img src="assets/images/logo/puclogo.png" style="width: 8rem;" alt="">
         </div>
         <div class="text-footer">
-          <h4> Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. <br> Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. <br> Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras. </h4>
+          <h4> Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas
+            em eventos que podem acontecer, ou não. <br> Com funcionalidades como cadastro rápido, gestão de saldo,
+            histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis.
+            <br> Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações
+            financeiras. </h4>
         </div>
         <!-- Links para: Home, Carteira, Adicionar Fundos, Retirar Fundos, login, cadastro -->
         <div class="links d-flex gap-20 justify-center">
@@ -291,128 +317,180 @@
           <a href="#">Adicionar Fundos</a>
           <a href="#">Retirar Fundos</a>
           <a href="#">Login</a>
-          <a href="#">Cadastro</a>          
+          <a href="#">Cadastro</a>
         </div>
       </div>
     </div>
-    
+
   </footer>
   <!-- Modal de criação de evento -->
   <div class="modal" id="eventModal">
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModal">&times;</span>
-        <div class="logo mb-30">
-          <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      <div class="logo mb-30">
+        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      </div>
+      <div class="event-name" style="margin: 26px 0;">
+        <div class="title">
+          Criar um evento na PUC BET
         </div>
-        <div class="event-name" style="margin: 26px 0;">
-          <div class="title">
-            Criar um evento na PUC BET
+      </div>
+      <form action="" id="eventForm">
+        <div class="input">
+          <input type="text" placeholder="Nome do evento" id="eventTitle" required>
+        </div>
+        <div class="input">
+          <input type="text" placeholder="Descrição do evento" id="eventDesc" required>
+        </div>
+        <p style=" display: flex; width: 100%; margin-left: 4px; font-size: 15px; margin: 10px 5px 9px; ">*Data e
+          horário de Inicio do Evento</p>
+        <div class="d-flex row justify-between">
+          <div class="input date">
+            <input type="date" placeholder="Data de início do evento" id="eventDate" required>
+          </div>
+          <div class="input">
+            <input type="time" placeholder="Hora de início do evento" id="eventTime" required>
           </div>
         </div>
-        <form action="" id="eventForm">
-          <div class="input">
-              <input type="text" placeholder="Nome do evento" id="eventTitle" required>
+        <p style=" display: flex; width: 100%; margin-left: 4px; font-size: 15px; margin: 10px 5px 9px; ">*Data e
+          horário de termino do Evento</p>
+        <div class="d-flex row justify-between">
+          <div class="input date">
+            <input type="date" placeholder="Data de fim do evento" id="eventDateEnd" required>
           </div>
           <div class="input">
-              <input type="text" placeholder="Descrição do evento" id="eventDesc" required>
+            <input type="time" placeholder="Hora de fim do evento" id="eventTimeEnd" required>
           </div>
-          <p style=" display: flex; width: 100%; margin-left: 4px; font-size: 15px; margin: 10px 5px 9px; ">*Data e horário de Inicio do Evento</p>
-          <div class="d-flex row justify-between">
-              <div class="input date">
-                  <input type="date" placeholder="Data de início do evento" id="eventDate" required>
-              </div>
-              <div class="input">
-                  <input type="time" placeholder="Hora de início do evento" id="eventTime" required>
-              </div>
-          </div>
-          <p style=" display: flex; width: 100%; margin-left: 4px; font-size: 15px; margin: 10px 5px 9px; ">*Data e horário de termino do Evento</p>
-          <div class="d-flex row justify-between">
-              <div class="input date">
-                  <input type="date" placeholder="Data de fim do evento" id="eventDateEnd" required>
-              </div>
-              <div class="input">
-                  <input type="time" placeholder="Hora de fim do evento" id="eventTimeEnd" required>
-              </div>
-          </div>
-          <div class="input">
-              <input type="text" placeholder="Categoria do evento" id="eventCategory" required>
-          </div>
-          <div class="input">
-              <input type="number" placeholder="Preço da cota" id="quota" required>
-          </div>
-          <div class="input">
-              <button type="submit" class="btn form" id="createEvent">Criar Evento</button>
-          </div>
-      </form>      
+        </div>
+        <div class="input">
+          <input type="text" placeholder="Categoria do evento" id="eventCategory" required>
+        </div>
+        <div class="input">
+          <input type="number" placeholder="Preço da cota" id="quota" required>
+        </div>
+        <div class="input">
+          <button type="submit" class="btn form" id="createEvent">Criar Evento</button>
+        </div>
+      </form>
     </div>
   </div>
   <!-- Modal SignIn -->
   <div class="modal" id="signInModal">
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModalSignIn">&times;</span>
-        <div class="logo mb-30">
-          <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      <div class="logo mb-30">
+        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      </div>
+      <div class="event-name" style="margin: 26px 0;">
+        <div class="title">
+          Login PUC BET
         </div>
-        <div class="event-name" style="margin: 26px 0;">
-          <div class="title">
-            Login PUC BET
-          </div>
+      </div>
+      <form action="" method="POST" id="SignInForm">
+        <!-- Email e Password para Logar -->
+        <div class="input">
+          <input type="email" placeholder="Email" id="email" name="email" required>
         </div>
-        <form action="" method="POST" id="SignInForm">
-          <!-- Email e Password para Logar -->
-          <div class="input">
-            <input type="email" placeholder="Email" id="email" name="email" required>
-          </div>
-          <div class="input">
-            <input type="password" placeholder="Senha" id="password" name="password" required>
-          </div>
-          <div class="input">
-            <button type="submit" class="btn form" id="signInButton">Entrar</button>
-          </div>
-      </form>      
+        <div class="input">
+          <input type="password" placeholder="Senha" id="password" name="password" required>
+        </div>
+        <div class="input">
+          <button type="submit" class="btn form" id="signInButton">Entrar</button>
+        </div>
+      </form>
     </div>
   </div>
 
- <!-- Modal SignUp -->
-<div class="modal" id="signUpModal">
-  <div class="modal-content text-center">
-    <span class="close-btn" id="closeModalSignUp">&times;</span>
-    <div class="logo mb-30">
-      <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+  <!-- Modal SignUp -->
+  <div class="modal" id="signUpModal">
+    <div class="modal-content text-center">
+      <span class="close-btn" id="closeModalSignUp">&times;</span>
+      <div class="logo mb-30">
+        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      </div>
+      <div class="event-name" style="margin: 26px 0;">
+        <div class="title">
+          Cadastro PUC BET
+        </div>
+      </div>
+      <form action="" method="POST" id="SignUpForm" autocomplete="off">
+        <div class="input">
+          <input type="text" placeholder="Nome Completo" id="name" name="name" required autocomplete="off">
+        </div>
+        <div class="input">
+          <input type="email" placeholder="Email" id="signUpEmail" name="signUpEmail" required autocomplete="off">
+        </div>
+        <div class="input">
+          <input type="text" placeholder="Telefone" id="phone" name="phone" required autocomplete="off">
+        </div>
+        <div class="input">
+          <input type="date" placeholder="Data de Nascimento" id="birthdate" name="birthdate" required
+            autocomplete="off">
+        </div>
+        <div class="input">
+          <input type="text" placeholder="CPF" id="cpf" name="cpf" required autocomplete="off">
+        </div>
+        <div class="input">
+          <input type="password" placeholder="Senha" id="password" name="password" required autocomplete="off">
+        </div>
+        <div class="input">
+          <button type="submit" class="btn form" id="signUpButton">Cadastrar</button>
+        </div>
+      </form>
     </div>
-    <div class="event-name" style="margin: 26px 0;">
-      <div class="title">
-        Cadastro PUC BET
-      </div>
-    </div>
-    <form action="" method="POST" id="SignUpForm" autocomplete="off">
-      <div class="input">
-        <input type="text" placeholder="Nome Completo" id="name" name="name" required autocomplete="off">
-      </div>
-      <div class="input">
-        <input type="email" placeholder="Email" id="signUpEmail" name="signUpEmail" required autocomplete="off">
-      </div>
-      <div class="input">
-        <input type="text" placeholder="Telefone" id="phone" name="phone" required autocomplete="off">
-      </div>
-      <div class="input">
-        <input type="date" placeholder="Data de Nascimento" id="birthdate" name="birthdate" required autocomplete="off">
-      </div>
-      <div class="input">
-        <input type="text" placeholder="CPF" id="cpf" name="cpf" required autocomplete="off">
-      </div>
-      <div class="input">
-        <input type="password" placeholder="Senha" id="password" name="password" required autocomplete="off">
-      </div>
-      <div class="input">
-        <button type="submit" class="btn form" id="signUpButton">Cadastrar</button>
-      </div>
-    </form>          
   </div>
-</div>
+
+  <!-- Modal: bet on Event -->
+  <div class="modal" id="betOnEventModal">
+    <div class="modal-content text-center">
+      <span class="close-btn" id="closeModalBetOnEvent">&times;</span>
+      <div class="logo mb-30">
+        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+      </div>
+      <div class="event-name" style="margin: 26px 0;">
+        <div class="title"></div>
+      </div>
+      <!-- Descrição do evento -->
+      <div class="event-description one">
+        <p></p>
+      </div>
+      <!-- Descrição do evento 2 -->
+      <div class="event-description two">
+        <p></p>
+      </div>
+      <!-- Escolha se o evento vai acontecer ou não -->
+      <div class="event-status">
+        <p>Escolha se o evento vai acontecer ou não, faça sua aposta!</p>
+      </div>
+      <form action="" method="POST" id="betOnEventForm" autocomplete="off">
+        <div class="input-group">
+          <div class="input">
+            <input type="radio" id="yes" name="eventBetStatus" value="yes" required>
+            <label for="yes">Sim</label>
+          </div>
+          <div class="input">
+            <input type="radio" id="no" name="eventBetStatus" value="no" required>
+            <label for="no">Não</label>
+          </div>
+        </div>
+
+        <!-- Quantas cotas você quer comprar? -->
+        <div class="event-quota pd-top-30">
+          <p>Qual o número de cotas que deseja apostar?</p>
+        </div>
+        <div class="input">
+          <input type="number" placeholder="Insira aqui..." id="betOnEventquota" name="betOnEventquota" required>
+        </div>
+        <div class="input">
+          <button type="submit" class="btn form" id="betOnEventButton">Apostar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
 
 </body>
 <!-- JavaScript -->
 <script src="assets/js/main.js"></script>
+
 </html>

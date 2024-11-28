@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Parkinsans:wght@300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"> <!-- Link para o CSS externo -->
+  <title>Minha Carteira</title>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div>
+        <p class="label">Saldo Atual</p>
+        <p class="balance" id="balance">...</p>
+      </div>
+      <!-- Formulário de Transação -->
+      <div class="button-group">
+        <label class="label">Tipo de Transação</label>
+        <input type="radio" id="deposit" name="transaction" class="radio-input" checked>
+        <label for="deposit" class="btn">Depositar</label>
+      
+        <input type="radio" id="withdraw" name="transaction" class="radio-input">
+        <label for="withdraw" class="btn">Sacar</label>
+      </div>
+      
+      <button id="submitTransaction" class="btn submitButton">Realizar Transação</button>
+      
+    </div>
+
+    <div class="table-container">
+      <h3>Lista de Apostas</h3>
+      <table id="betsTable">
+        <thead>
+          <tr>
+            <th>Nome do Evento</th>
+            <th>Quantia Apostada (R$)</th>
+            <th>Escolha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Jogo de Futebol - Time A vs Time B</td>
+            <td>50,00</td>
+            <td>Vitória do Time A</td>
+          </tr>
+          <tr>
+            <td>Corrida de Cavalos - Grande Prêmio</td>
+            <td>100,00</td>
+            <td>Cavalo X</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+  </div>
+
+   <!-- Modal para Depositar -->
+  <div id="modal-deposit" class="modal">
+    <h2>Adicionar Fundos</h2>
+    <p>Preencha os campos abaixo para adicionar fundos à sua conta.</p>
+    
+    <!-- Formulário para adicionar fundos -->
+    <form id="transaction-form">
+      <label for="amount" class="label">Valor</label>
+      <input type="number" id="amount" class="input" placeholder="R$ 100,00" step="0.01" min="0.01" required>
+      
+      <label for="Card-Number" class="label">Número do Cartão</label>
+      <input type="text" id="Card-Number" class="input" placeholder="1111 3455 4444 5555" required>
+      
+      <label for="Expiry-Data" class="label">Data de Expiração</label>
+      <input type="date" id="Expiry-Data" class="input" required>
+      
+      <label for="CVV" class="label">CVV</label>
+      <input type="text" id="CVV" class="input" placeholder="123" required>
+      
+      <!-- Botões de ação -->
+      <div class="modal-actions">
+        <button type="submit" class="btn">Confirmar</button>
+        <button type="button" class="btn" onclick="closeModal()">Fechar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal para Sacar -->
+  <!-- Modal para Sacar -->
+<div id="modal-withdraw" class="modal">
+  <h2>Sacar Fundos</h2>
+  <p>Escolha o valor e o método de saque.</p>
+
+  <!-- Campo para o valor -->
+  <label for="withdraw-amount" class="label">Valor</label>
+  <input type="number" id="withdraw-amount" class="input" placeholder="R$ 100,00" step="0.01" min="0.01" required>
+
+  <!-- Tipo de Transação -->
+  <div class="button-group">
+    <input type="radio" id="pix" name="type-of-transaction" class="radio-input" checked onclick="updateWithdrawFields()">
+    <label for="pix" class="btn">Pix</label>
+    <input type="radio" id="Transferencia-Bancaria" name="type-of-transaction" class="radio-input" onclick="updateWithdrawFields()">
+    <label for="Transferencia-Bancaria" class="btn">Transferência Bancária</label>
+  </div>
+
+  <!-- Campos para Pix -->
+  <div id="pix-fields" class="withdraw-fields">
+    <label for="cpf" class="label">CPF:</label>
+    <input id="cpf" class="input" type="text" placeholder="000.000.000-00" required>
+  </div>
+
+  <!-- Campos para Transferência Bancária -->
+  <div id="bank-fields" class="withdraw-fields hidden">
+    <div>
+      <label for="bank" class="label">Banco:</label>
+      <input id="bank" class="input" type="text" placeholder="Banco do Brasil, Sicredi" required>
+    </div>
+    <div>
+      <label for="agency" class="label">Agência / Número de Conta Corrente:</label>
+      <input id="agency" class="input" type="text" placeholder="Por exemplo: 1000/10001-1" required>
+    </div>
+    <div>
+      <label for="accountNumber" class="label">Número da Conta Corrente:</label>
+      <input id="accountNumber" class="input" type="text" placeholder="Por exemplo: 1234567" required>
+    </div>
+  </div>
+
+  <div class="modal-actions">
+    <button class="btn" onclick="confirmWithdraw()">Confirmar</button>
+    <button class="btn" onclick="closeModal()">Fechar</button>
+  </div>
+</div>
+
+  
+  <div id="modal-backdrop" class="modal-backdrop"></div>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,58 +1,58 @@
 /* Get Events: Busca os eventos */
 document.addEventListener("DOMContentLoaded", () => {
-    // Containers específicos para cada filtro
-    const allEventsContainer = document.getElementById("events-container-all");
-    const groupedByCategoryContainer = document.getElementById("events-container-category");
-    const mostBetsContainer = document.getElementById("events-container-bets");
-    const finishingContainer = document.getElementById("events-container-finishing");
-  
-    // Função genérica para buscar eventos
-    const fetchEvents = async (filter) => {
-      try {
-        const response = await fetch("http://localhost:3000/getEvents", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "filter": filter,
-          },
-        });
-        if (!response.ok) throw new Error(`Erro ao buscar eventos (${filter}).`);
-        const events = await response.json();
-        renderEvents(events, filter);
-      } catch (error) {
-        console.error(`Erro ao carregar eventos (${filter}):`, error);
-        renderError(filter);
-      }
-    };
-  
-    // Renderiza eventos no container correto
-    const renderEvents = (events, filter) => {
-      let container;
-      switch (filter) {
-        case "all_events":
-          container = allEventsContainer;
-          break;
-        case "agrupados_por_categoria":
-          container = groupedByCategoryContainer;
-          break;
-        case "mais_apostas":
-          container = mostBetsContainer;
-          break;
-        case "finalizando":
-          container = finishingContainer;
-          break;
-      }
-  
-      // Limpa o container antes de renderizar
-      container.innerHTML = "";
-      if (events.length === 0) {
-        container.innerHTML = "<p class='no-events pd-top-30'>Nenhum evento encontrado.</p>";
-        return;
-      }
-  
-      // Adiciona cada card no container
-      events.forEach((event) => {
-        const eventCard = `
+  // Containers específicos para cada filtro
+  const allEventsContainer = document.getElementById("events-container-all");
+  const groupedByCategoryContainer = document.getElementById("events-container-category");
+  const mostBetsContainer = document.getElementById("events-container-bets");
+  const finishingContainer = document.getElementById("events-container-finishing");
+
+  // Função genérica para buscar eventos
+  const fetchEvents = async (filter) => {
+    try {
+      const response = await fetch("http://localhost:3000/getEvents", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "filter": filter,
+        },
+      });
+      if (!response.ok) throw new Error(`Erro ao buscar eventos (${filter}).`);
+      const events = await response.json();
+      renderEvents(events, filter);
+    } catch (error) {
+      console.error(`Erro ao carregar eventos (${filter}):`, error);
+      renderError(filter);
+    }
+  };
+
+  // Renderiza eventos no container correto
+  const renderEvents = (events, filter) => {
+    let container;
+    switch (filter) {
+      case "all_events":
+        container = allEventsContainer;
+        break;
+      case "agrupados_por_categoria":
+        container = groupedByCategoryContainer;
+        break;
+      case "mais_apostas":
+        container = mostBetsContainer;
+        break;
+      case "finalizando":
+        container = finishingContainer;
+        break;
+    }
+
+    // Limpa o container antes de renderizar
+    container.innerHTML = "";
+    if (events.length === 0) {
+      container.innerHTML = "<p class='no-events pd-top-30'>Nenhum evento encontrado.</p>";
+      return;
+    }
+
+    // Adiciona cada card no container
+    events.forEach((event) => {
+      const eventCard = `
           <div class="card">
             <div class="card-header">
               <span class="card-category">
@@ -63,84 +63,243 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="cat-name">${event.name}</div>
               </span>
               <span class="card-date">${formatDate(event.start_date)} - ${formatDate(event.end_date)}</span>
-            </div>        
+            </div>
             <div class="card-body">
               <p class="event-question">
                 Quota: R$${event.quota} | Approved: ${event.approved ? "Yes" : "No"} | Participations: ${event.bet_count ?? 0}
               </p>
+              <p class="event-question two">
+                ${event.description}
+              </p>
             </div>
             <div class="card-footer">
               <div class="event-container">
-                <a class="event-details-link" href="#modalEvent">Ver detalhes do evento</a>
+                <a class="event-details-link" href="#" data-event-id="${event.id}">
+                  <div>Ver detalhes do evento</div>
+                </a>
               </div>
             </div>
           </div>`;
-        
-        // Inserir o card no container
-        container.innerHTML += eventCard;
+
+      container.innerHTML += eventCard;
+    });
+
+    // Adicionar listener para abrir o modal
+    container.querySelectorAll('.event-details-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();  // Previne o comportamento de navegação
+
+        // Captura o ID do evento
+        const eventId = e.target.closest('a').getAttribute('data-event-id');
+        console.log("Event ID:", eventId); // Certifique-se de que o ID está sendo capturado corretamente
+        openModal(eventId);
       });
-  
-      // Agora inicializamos o IntersectionObserver
-      animateCardsOnVisibility(container);
-    };
-  
-    // Exibe mensagem de erro no container correspondente
-    const renderError = (filter) => {
-      let container;
-      switch (filter) {
-        case "all_events":
-          container = allEventsContainer;
-          break;
-        case "agrupados_por_categoria":
-          container = groupedByCategoryContainer;
-          break;
-        case "mais_apostas":
-          container = mostBetsContainer;
-          break;
-        case "finalizando":
-          container = finishingContainer;
-          break;
-      }
-      container.innerHTML = "<p class='error'>Erro ao carregar eventos. Tente novamente mais tarde.</p>";
-    };
-  
-    // Formata data
-    const formatDate = (isoDate) => {
-      const date = new Date(isoDate);
-      return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    };
-  
-    // Busca e renderiza eventos para todos os filtros
-    fetchEvents("all_events");
-    fetchEvents("agrupados_por_categoria");
-    fetchEvents("mais_apostas");
-    fetchEvents("finalizando");
-  });
-  
+    });
+
+
+    // Agora inicializamos o IntersectionObserver
+    animateCardsOnVisibility(container);
+  };
+
+  // Exibe mensagem de erro no container correspondente
+  const renderError = (filter) => {
+    let container;
+    switch (filter) {
+      case "all_events":
+        container = allEventsContainer;
+        break;
+      case "agrupados_por_categoria":
+        container = groupedByCategoryContainer;
+        break;
+      case "mais_apostas":
+        container = mostBetsContainer;
+        break;
+      case "finalizando":
+        container = finishingContainer;
+        break;
+    }
+    container.innerHTML = "<p class='error'>Erro ao carregar eventos. Tente novamente mais tarde.</p>";
+  };
+
+  // Formata data
+  const formatDate = (isoDate) => {
+    const date = new Date(isoDate);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  };
+
+  // Busca e renderiza eventos para todos os filtros
+  fetchEvents("all_events");
+  fetchEvents("agrupados_por_categoria");
+  fetchEvents("mais_apostas");
+  fetchEvents("finalizando");
+
   // Função que observa quando o card entra na tela e anima
   const animateCardsOnVisibility = (container) => {
     if (!container) return;
 
     const observer = new IntersectionObserver(
-        (entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    // Quando o card se torna visível, adiciona a classe "visible"
-                    entry.target.classList.add('visible');
-                    observer.unobserve(entry.target); // Para de observar o elemento
-                }
-            });
-        },
-        { threshold: 0.5 } // 50% do card precisa estar visível
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Quando o card se torna visível, adiciona a classe "visible"
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target); // Para de observar o elemento
+          }
+        });
+      },
+      { threshold: 0.5 } // 50% do card precisa estar visível
     );
 
     // Seleciona e observa os novos cards
     const cards = container.querySelectorAll('.card:not(.visible)');
     cards.forEach(card => observer.observe(card));
-};
+  };
+});
 
+/*** Modal de apostas */
+document.addEventListener("DOMContentLoaded", () => {
+  const betOnEventModal = document.getElementById("betOnEventModal");
+  const closeModalBetOnEvent = document.getElementById("closeModalBetOnEvent");
+  const betOnEventForm = document.getElementById("betOnEventForm");
 
+  // Função para pegar o CPF do usuário
+  const getUserCpf = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert("Você precisa estar logado para apostar.");
+      return null;
+    }
 
+    try {
+      const response = await fetch('http://localhost:3000/getCPFbyToken', {
+        method: 'GET',
+        headers: {
+          'token': token,
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return data.cpf;
+      } else {
+        throw new Error(data.message || "Erro ao obter CPF.");
+      }
+    } catch (error) {
+      console.error("Erro ao obter CPF:", error);
+      alert("Erro ao recuperar o CPF.");
+      return null;
+    }
+  };
+
+  // Função para fazer a aposta
+  const placeBet = async (event) => {
+    event.preventDefault();  // Previne o comportamento padrão do formulário (recarregar a página)
+
+    const eventId = document.getElementById("betOnEventButton").getAttribute("data-event-id");
+
+    if (!eventId) {
+      alert("ID do evento não encontrado.");
+      return;
+    }
+
+    const userCpf = await getUserCpf();
+    if (!userCpf) return;  // Se não conseguir pegar o CPF, não faz a aposta
+
+    const choiceInput = document.querySelector('input[name="eventBetStatus"]:checked');
+    let choice = 0; // Valor padrão para "não"
+
+    if (choiceInput) {
+      choice = choiceInput.value === 'yes' ? 1 : 0; // Define 1 para "sim", 0 para "não"
+    }
+
+    const quotaAmount = parseFloat(document.getElementById("betOnEventquota").value);
+
+    if (!quotaAmount || quotaAmount <= 0) {
+      alert("Por favor, insira um valor válido para a quantidade de cotas.");
+      return;
+    }
+
+    const betData = {
+      cpf: userCpf,
+      eventId: eventId,
+      quotaAmount: quotaAmount,
+      choice: choice, // Certifica-se de que o valor é numérico (0 ou 1)
+    };
+
+    // Debug
+    console.log("Bet Data:", betData);
+
+    try {
+      const response = await fetch('http://localhost:3000/betOnEvent', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "cpf": betData.cpf.toString(),
+          "eventId": betData.eventId.toString(),
+          "quotaAmount": betData.quotaAmount.toString(),
+          "choice": betData.choice.toString()
+        }
+      });
+
+      const result = await response.json(); // Aqui espera-se que a resposta seja um JSON
+      if (response.ok) {
+        alert(result.message);
+        betOnEventModal.style.display = "none"; // Fecha o modal
+        betOnEventForm.reset();
+      } else {
+        alert(result.message || "Erro ao realizar a aposta.");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer a aposta:", error);
+      alert("Erro ao fazer a aposta. Tente novamente." + error);
+    }
+
+  };
+
+  // Lida com o clique para abrir o modal
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".event-details-link")) {
+      event.preventDefault(); // Impede a navegação padrão
+
+      const eventCard = event.target.closest(".card");
+      if (eventCard) {
+        // Captura o ID do evento diretamente do link (data-event-id)
+        const eventId = eventCard.querySelector(".event-details-link").getAttribute("data-event-id");
+        console.log("Event ID:", eventId); // Verifique se o ID está sendo capturado corretamente
+
+        // Preenche as informações no modal
+        const eventName = eventCard.querySelector(".cat-name").innerText;
+        const eventDescription = eventCard.querySelector(".event-question").innerText;
+        const eventDescription2 = eventCard.querySelector(".event-question.two").innerText;
+
+        document.querySelector("#betOnEventModal .event-name .title").innerText = eventName;
+        document.querySelector("#betOnEventModal .event-description.one p").innerText = eventDescription;
+        document.querySelector("#betOnEventModal .event-description.two p").innerText = eventDescription2;
+
+        // Atribui o ID do evento ao botão de aposta
+        document.getElementById("betOnEventButton").setAttribute("data-event-id", eventId);
+
+        betOnEventModal.style.display = "flex"; // Abre o modal
+      }
+    }
+  });
+
+  // Lida com o clique para fechar o modal
+  closeModalBetOnEvent.addEventListener("click", () => {
+    betOnEventModal.style.display = "none";
+  });
+
+  // Fecha o modal ao clicar fora do conteúdo
+  window.addEventListener("click", (event) => {
+    if (event.target === betOnEventModal) {
+      betOnEventModal.style.display = "none";
+    }
+  });
+
+  // Quando o formulário for enviado
+  betOnEventForm.addEventListener("submit", placeBet);
+});
+
+/* Add Event Fetch Requisition */
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("eventModal");
   const closeModal = document.getElementById("closeModal");
@@ -148,143 +307,145 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Abrir Modal
   document.querySelector(".modal-btn").addEventListener("click", () => {
-      modal.style.display = "flex";
+    modal.style.display = "flex";
   });
 
   // Fechar Modal
   closeModal.addEventListener("click", () => {
-      modal.style.display = "none";
+    modal.style.display = "none";
   });
 
   // Fechar ao clicar fora do modal
   window.addEventListener("click", (e) => {
-      if (e.target === modal) {
-          modal.style.display = "none";
-      }
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
   });
 
   // Submissão do formulário com integração ao backend
   form.addEventListener("submit", async (event) => {
-      event.preventDefault(); // Impede o comportamento padrão de envio
+    event.preventDefault(); // Impede o comportamento padrão de envio
 
-      const token = localStorage.getItem("authToken"); // Pegando o token do localStorage
+    const token = localStorage.getItem("authToken"); // Pegando o token do localStorage
 
-      if (!token) {
-          alert("Token de autenticação não encontrado.");
-          return;
+    if (!token) {
+      alert("Token de autenticação não encontrado.");
+      return;
+    }
+
+    try {
+      // Requisição para pegar o CPF do usuário associado ao token
+      const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
+        method: 'GET',
+        headers: {
+          'token': token
+        }
+      });
+
+      const cpfResult = await cpfResponse.json();
+      if (!cpfResult.cpf) {
+        throw new Error('CPF não encontrado');
       }
 
-      try {
-          // Requisição para pegar o CPF do usuário associado ao token
-          const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
-              method: 'GET',
-              headers: {
-                  'token': token
-              }
-          });
+      // Coletar os dados do formulário
+      const formData = {
+        name: document.getElementById("eventTitle").value.trim(), // Nome do evento
+        descricao: document.getElementById("eventDesc").value.trim(), // Descrição do evento
+        category: document.getElementById("eventCategory").value.trim(), // Categoria do evento
+        quota: parseFloat(document.getElementById("quota").value), // Preço da cota
+        start_date: document.getElementById("eventDate").value + " " + document.getElementById("eventTime").value, // Data e hora de início
+        end_date: document.getElementById("eventDateEnd").value + " " + document.getElementById("eventTimeEnd").value, // Data e hora de fim
+        creator_CPF: cpfResult.cpf, // CPF obtido pelo token
+      };
 
-          const cpfResult = await cpfResponse.json();
-          if (!cpfResult.cpf) {
-              throw new Error('CPF não encontrado');
-          }
+      // Fazer a requisição para o servidor (enviando os dados com o método PUT)
+      const response = await fetch("http://localhost:3000/addNewEvent", {
+        method: "PUT", // O backend espera os dados via GET (conforme seu handler)
+        headers: {
+          "Content-Type": "application/json",
+          "name": formData.name,
+          "description": formData.descricao,
+          "category": formData.category,
+          "quota": formData.quota.toString(), // Convertendo para string
+          "start_date": formData.start_date,
+          "end_date": formData.end_date,
+          "creator_CPF": cpfResult.cpf.toString() // Convertendo para string
+        }
+      });
 
-          // Coletar os dados do formulário
-          const formData = {
-              name: document.getElementById("eventTitle").value, // Nome do evento
-              category: document.getElementById("eventCategory").value, // Categoria do evento
-              quota: parseFloat(document.getElementById("quota").value), // Preço da quota
-              start_date: document.getElementById("eventDate").value + " " + document.getElementById("eventTime").value, // Data e hora de início
-              end_date: document.getElementById("eventDateEnd").value + " " + document.getElementById("eventTimeEnd").value, // Data e hora de fim
-              creator_CPF: cpfResult.cpf, // CPF obtido pelo token
-          };
+      const result = await response.text(); // Pega a mensagem retornada pelo backend
 
-          // Fazer a requisição para o servidor (enviando os dados com o método PUT)
-          const response = await fetch("http://localhost:3000/addNewEvent", {
-            method: "PUT", // O backend espera os dados via GET (conforme seu handler)
-            headers: {
-                "Content-Type": "application/json",
-                "name": formData.name,
-                "category": formData.category,
-                "quota": formData.quota.toString(), // Convertendo para string
-                "start_date": formData.start_date,
-                "end_date": formData.end_date,
-                "creator_CPF": cpfResult.cpf.toString() // Convertendo para string
-            }
-        });
+      if (response.ok) {
+        alert(result);
+        modal.style.display = "none"; // Fecha o modal
+        form.reset(); // Limpa o formulário
 
-          const result = await response.text(); // Pega a mensagem retornada pelo backend
-
-          if (response.ok) {
-              alert(result);
-              modal.style.display = "none"; // Fecha o modal
-              form.reset(); // Limpa o formulário
-          } else {
-              alert("Erro ao criar o evento: " + result);
-          }
-      } catch (error) {
-          console.error("Erro ao enviar formulário:", error);
-          alert("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+      } else {
+        alert(result);
       }
+    } catch (error) {
+      console.error("Erro ao enviar formulário:", error);
+      alert("Ocorreu um erro inesperado. Tente novamente mais tarde.");
+    }
   });
 });
 
-
 /* Busca de eventos dinmicamente por palavra chave */
 document.addEventListener("DOMContentLoaded", () => {
-    const searchInput = document.getElementById("search-input");
-    const searchMessage = document.getElementById("search-message");
-    const eventsContainer = document.getElementById("events-container");
+  const searchInput = document.getElementById("search-input");
+  const searchMessage = document.getElementById("search-message");
+  const eventsContainer = document.getElementById("events-container");
 
-    let debounceTimeout; // Variável para armazenar o tempo do debounce
+  let debounceTimeout; // Variável para armazenar o tempo do debounce
 
-    // Função para formatar a data
-    const formatDate = (isoDate) => {
-      const date = new Date(isoDate);
-      return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-    };
+  // Função para formatar a data
+  const formatDate = (isoDate) => {
+    const date = new Date(isoDate);
+    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  };
 
-    // Função para buscar eventos do servidor
-    const fetchEvents = async (keyword) => {
-      try {
-        const response = await fetch("http://localhost:3000/searchEvent", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "keyword": keyword,
-          },
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();  // Tenta pegar o erro retornado
-          throw new Error(errorData.message || 'Erro desconhecido');
-        }
-    
-        const events = await response.json();
-        renderEvents(events, keyword);
-      } catch (error) {
-        console.error("Erro ao carregar eventos:", error); // Aqui já imprime o erro
-        renderError(keyword);
-      }
-    };
-    
-    
+  // Função para buscar eventos do servidor
+  const fetchEvents = async (keyword) => {
+    try {
+      const response = await fetch("http://localhost:3000/searchEvent", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "keyword": keyword,
+        },
+      });
 
-    // Renderiza os eventos
-    const renderEvents = (events, keyword) => {
-      // Exibe a mensagem com o texto pesquisado
-      searchMessage.innerHTML = `Resultados da busca: <strong>${keyword}</strong>`;
-
-      // Limpa o container antes de renderizar novos eventos
-      eventsContainer.innerHTML = "";
-
-      if (events.length === 0) {
-        eventsContainer.innerHTML = "<p class='no-events'>Nenhum evento encontrado.</p>";
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();  // Tenta pegar o erro retornado
+        throw new Error(errorData.message || 'Erro desconhecido');
       }
 
-      // Adiciona cada card no container
-      events.forEach((event) => {
-        const eventCard = `
+      const events = await response.json();
+      renderEvents(events, keyword);
+    } catch (error) {
+      console.error("Erro ao carregar eventos:", error); // Aqui já imprime o erro
+      renderError(keyword);
+    }
+  };
+
+
+
+  // Renderiza os eventos
+  const renderEvents = (events, keyword) => {
+    // Exibe a mensagem com o texto pesquisado
+    searchMessage.innerHTML = `Resultados da busca: <strong>${keyword}</strong>`;
+
+    // Limpa o container antes de renderizar novos eventos
+    eventsContainer.innerHTML = "";
+
+    if (events.length === 0) {
+      eventsContainer.innerHTML = "<p class='no-events'>Nenhum evento encontrado.</p>";
+      return;
+    }
+
+    // Adiciona cada card no container
+    events.forEach((event) => {
+      const eventCard = `
           <div class="card">
             <div class="card-header">
               <span class="card-category">
@@ -300,48 +461,53 @@ document.addEventListener("DOMContentLoaded", () => {
               <p class="event-question">
                 Quota: R$${event.quota} | Approved: ${event.approved ? "Yes" : "No"} | Participations: ${event.bet_count ?? 0}
               </p>
+              <p class="event-question two">
+                ${event.description}
+              </p>
             </div>
             <div class="card-footer">
               <div class="event-container">
-                <a class="event-details-link" href="#modalEvent">Ver detalhes do evento</a>
+                <a id="openModalBetonEvent" class="event-details-link" >
+                  <div>Ver detalhes do evento</div>
+                </a>
               </div>
             </div>
           </div>`;
-        eventsContainer.innerHTML += eventCard;
-      });
-
-      // Adicionar a classe "visible" após o conteúdo ser inserido
-      const cards = eventsContainer.querySelectorAll('.card');
-      setTimeout(() => {
-        cards.forEach(card => {
-          card.classList.add('visible');
-        });
-      }, 100); // Pequeno atraso para garantir que os elementos sejam renderizados antes de aplicar a transição
-    };
-
-    // Exibe mensagem de erro
-    const renderError = (keyword) => {
-      searchMessage.innerHTML = `Nenhum resultado para: <strong>${keyword}</strong>`;
-      eventsContainer.innerHTML = "";
-    };
-
-    // Função de debounce
-    const debounce = (func, delay) => {
-      clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(func, delay);
-    };
-
-    // Evento ao digitar no input
-    searchInput.addEventListener("input", () => {
-      const keyword = searchInput.value.trim();
-      if (keyword) {
-        // Usando debounce para fazer a busca após 0.5s
-        debounce(() => fetchEvents(keyword), 500);
-      } else {
-        searchMessage.innerHTML = "";
-        eventsContainer.innerHTML = "";
-      }
+      eventsContainer.innerHTML += eventCard;
     });
+
+    // Adicionar a classe "visible" após o conteúdo ser inserido
+    const cards = eventsContainer.querySelectorAll('.card');
+    setTimeout(() => {
+      cards.forEach(card => {
+        card.classList.add('visible');
+      });
+    }, 100); // Pequeno atraso para garantir que os elementos sejam renderizados antes de aplicar a transição
+  };
+
+  // Exibe mensagem de erro
+  const renderError = (keyword) => {
+    searchMessage.innerHTML = `Nenhum resultado para: <strong>${keyword}</strong>`;
+    eventsContainer.innerHTML = "";
+  };
+
+  // Função de debounce
+  const debounce = (func, delay) => {
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(func, delay);
+  };
+
+  // Evento ao digitar no input
+  searchInput.addEventListener("input", () => {
+    const keyword = searchInput.value.trim();
+    if (keyword) {
+      // Usando debounce para fazer a busca após 0.5s
+      debounce(() => fetchEvents(keyword), 500);
+    } else {
+      searchMessage.innerHTML = "";
+      eventsContainer.innerHTML = "";
+    }
+  });
 });
 
 /* Modal: Sign In */
@@ -351,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeModalSignIn = document.getElementById('closeModalSignIn');
 
   openModalSignIn.addEventListener('click', () => {
-      signInModal.style.display = 'flex';
+    signInModal.style.display = 'flex';
   });
 
 
@@ -360,9 +526,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('click', (event) => {
-      if (event.target === signInModal) {
-          signInModal.style.display = 'none';
-      }
+    if (event.target === signInModal) {
+      signInModal.style.display = 'none';
+    }
   });
 });
 
@@ -373,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeModalSignUp = document.getElementById('closeModalSignUp');
 
   openModalSignUp.addEventListener('click', () => {
-      signUpModal.style.display = 'flex';
+    signUpModal.style.display = 'flex';
   });
 
 
@@ -382,52 +548,51 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('click', (event) => {
-      if (event.target === signUpModal) {
-        signUpModal.style.display = 'none';
-      }
+    if (event.target === signUpModal) {
+      signUpModal.style.display = 'none';
+    }
   });
 });
-
 
 /* Login Fetch Requisition */
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("SignInForm");
 
   form.addEventListener("submit", async (event) => {
-      event.preventDefault(); // Impede o comportamento padrão de envio
+    event.preventDefault(); // Impede o comportamento padrão de envio
 
-      // Coletar os dados do formulário
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    // Coletar os dados do formulário
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-      try {
-          // Fazer a requisição para o servidor
-          const response = await fetch("http://localhost:3000/login", {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-                  "email": email,
-                  "password": password,
-              },
-          });
+    try {
+      // Fazer a requisição para o servidor
+      const response = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "email": email,
+          "password": password,
+        },
+      });
 
-          const result = await response.json(); // Resultado do backend
+      const result = await response.json(); // Resultado do backend
 
-          if (response.ok) {
-              // Armazenar o token e a role no localStorage
-              localStorage.setItem("authToken", result.token);  // Armazenar o token
-              localStorage.setItem("userRole", result.role);    // Armazenar a role
-              console.log(result.role);
-              console.log(result.token);
-              alert(`${result.message}`);
-              window.location.reload();
-          } else {
-              alert(`${result.message}`); // Mensagem de erro do backend
-          }
-      } catch (error) {
-          console.error("Erro ao conectar ao servidor:", error);
-          alert("Erro ao conectar ao servidor. Verifique sua conexão." + error);
+      if (response.ok) {
+        // Armazenar o token e a role no localStorage
+        localStorage.setItem("authToken", result.token);  // Armazenar o token
+        localStorage.setItem("userRole", result.role);    // Armazenar a role
+        console.log(result.role);
+        console.log(result.token);
+        alert(`${result.message}`);
+        window.location.reload();
+      } else {
+        alert(`${result.message}`); // Mensagem de erro do backend
       }
+    } catch (error) {
+      console.error("Erro ao conectar ao servidor:", error);
+      alert("Erro ao conectar ao servidor. Verifique sua conexão." + error);
+    }
   });
 });
 
@@ -436,74 +601,75 @@ document.addEventListener("DOMContentLoaded", async () => {
   const token = localStorage.getItem("authToken"); // Pegando o token do localStorage
 
   if (token) {
-      try {
-          // Requisição para pegar o CPF do usuário associado ao token
-          const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
-              method: 'GET',
-              headers: {
-                  'token': token
-              }
-          });
+    try {
+      // Requisição para pegar o CPF do usuário associado ao token
+      const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
+        method: 'GET',
+        headers: {
+          'token': token
+        }
+      });
 
-          const cpfResult = await cpfResponse.json();
-          if (!cpfResult.cpf) {
-              throw new Error('CPF não encontrado');
-          }
-
-          // Requisição para pegar o saldo da carteira do usuário
-          const walletResponse = await fetch('http://localhost:3000/getWalletBalance', {
-              method: 'GET',
-              headers: {
-                  'token': token
-              }
-          });
-
-          const walletResult = await walletResponse.json();
-          if (walletResult.balance == null) { // Verifica se é null ou undefined
-              throw new Error('Saldo não encontrado');
-          }
-
-
-          // Exibir o cabeçalho de usuário logado e ocultar o de não logado
-          document.getElementById('header-logged-in').style.display = 'block';
-          document.getElementById('header-logged-out').style.display = 'none';
-
-          // Exibir o saldo formatado
-          const formattedBalance = `R$ ${walletResult.balance.toFixed(2).replace('.', ',')}`;
-          document.getElementById('balance-amount').textContent = formattedBalance;
-
-          // Agora, exibe o nome do usuário e altera o botão para "Depositar"
-          const userNameElement = document.getElementById('user-name');
-          const welcomeMessage = document.getElementById('welcome-message');
-          const signupButton = document.getElementById('signup-button');
-
-          // Atualiza a interface com o nome do usuário e altera o botão de cadastro
-          welcomeMessage.innerHTML = `Welcome to PUC BET!`;
-          signupButton.innerHTML = 'Depositar'; // Substitui o botão de "Cadastrar-se" por "Depositar"
-          
-          // Atualiza o subtítulo para refletir a mudança solicitada
-          document.querySelector('.welcome-subtitle').textContent = 'Deposite qualquer valor e comece a apostar!';
-
-      } catch (error) {
-          console.error('Erro ao obter dados do usuário:', error);
+      const cpfResult = await cpfResponse.json();
+      if (!cpfResult.cpf) {
+        throw new Error('CPF não encontrado');
       }
-  } else {
-      // Caso o token não esteja presente, o cabeçalho de login será exibido
-      document.getElementById('header-logged-out').style.display = 'block';
-      document.getElementById('header-logged-in').style.display = 'none';
 
-      // Atualiza a interface para o estado de não logado
+      // Requisição para pegar o saldo da carteira do usuário
+      const walletResponse = await fetch('http://localhost:3000/getWalletBalance', {
+        method: 'GET',
+        headers: {
+          'token': token
+        }
+      });
+
+      const walletResult = await walletResponse.json();
+      if (walletResult.balance == null) { // Verifica se é null ou undefined
+        throw new Error('Saldo não encontrado');
+      }
+
+
+      // Exibir o cabeçalho de usuário logado e ocultar o de não logado
+      document.getElementById('header-logged-in').style.display = 'block';
+      document.getElementById('header-logged-out').style.display = 'none';
+
+      // Exibir o saldo formatado
+      const formattedBalance = `R$ ${walletResult.balance.toFixed(2).replace('.', ',')}`;
+      document.getElementById('balance-amount').textContent = formattedBalance;
+
+      // Agora, exibe o nome do usuário e altera o botão para "Depositar"
+      const userNameElement = document.getElementById('user-name');
       const welcomeMessage = document.getElementById('welcome-message');
       const signupButton = document.getElementById('signup-button');
-      
-      welcomeMessage.innerHTML = `Welcome to PUC BET!`;
-      signupButton.innerHTML = 'Cadastre-se'; // Exibe o botão de cadastro novamente
 
-      // Altera o subtítulo de boas-vindas para o estado de não logado
-      document.querySelector('.welcome-subtitle').textContent = 'Faça seu cadastro, deposite qualquer valor e comece a apostar!';
+      // Atualiza a interface com o nome do usuário e altera o botão de cadastro
+      welcomeMessage.innerHTML = `Welcome to PUC BET!`;
+      signupButton.innerHTML = 'Depositar'; // Substitui o botão de "Cadastrar-se" por "Depositar"
+
+      // Atualiza o subtítulo para refletir a mudança solicitada
+      document.querySelector('.welcome-subtitle').textContent = 'Deposite qualquer valor e comece a apostar!';
+
+    } catch (error) {
+      console.error('Erro ao obter dados do usuário:', error);
+    }
+  } else {
+    // Caso o token não esteja presente, o cabeçalho de login será exibido
+    document.getElementById('header-logged-out').style.display = 'block';
+    document.getElementById('header-logged-in').style.display = 'none';
+
+    // Atualiza a interface para o estado de não logado
+    const welcomeMessage = document.getElementById('welcome-message');
+    const signupButton = document.getElementById('signup-button');
+
+    welcomeMessage.innerHTML = `Welcome to PUC BET!`;
+    signupButton.innerHTML = 'Cadastre-se'; // Exibe o botão de cadastro novamente
+
+    // Altera o subtítulo de boas-vindas para o estado de não logado
+    document.querySelector('.welcome-subtitle').textContent = 'Faça seu cadastro, deposite qualquer valor e comece a apostar!';
   }
 });
 
+/*  Sign Up Fetch Requisition */
 document.getElementById('SignUpForm').addEventListener('submit', async function (event) {
   event.preventDefault(); // Impede o comportamento padrão do formulário
 
@@ -515,8 +681,6 @@ document.getElementById('SignUpForm').addEventListener('submit', async function 
   const birthdate = document.getElementById('birthdate').value.trim();
   const cpf = document.getElementById('cpf').value.trim();
   const password = document.getElementById('password').value.trim();
-
-  console.log("Dados enviados:", { name, email, phone, birthdate, cpf, password });
 
   // Verifica se todos os campos foram preenchidos
   if (!name || !email || !phone || !birthdate || !cpf || !password) {
@@ -554,7 +718,6 @@ document.getElementById('SignUpForm').addEventListener('submit', async function 
   }
 });
 
-
-document.getElementById('signUpModal').addEventListener('show', () => { 
+document.getElementById('signUpModal').addEventListener('show', () => {
   document.getElementById('SignUpForm').reset();
 });
