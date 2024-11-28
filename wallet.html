@@ -29,7 +29,7 @@
         </div>
         <div>
           <label for="amount" class="label">Valor</label>
-          <input type="number" id="amount" class="input" placeholder="R$ 0.00" step="0.01" min="0">
+          <input type="text" id="amount" class="input" placeholder="R$ 0.00"  step="0.01" min="0">
         </div>
         <div>
           <label for="description" class="label">Descrição (Opcional)</label>
@@ -58,7 +58,13 @@
 
     <!-- Modal para Depositar -->
   <div id="modal-deposit" class="modal">
-    <p>Você escolheu Depositar.</p>
+    <p>Preencha os campos.</p>
+    <label for="Card-Number" class="label">Número do Cartão</label>
+    <input type="text" id="Card-Number" class="input" placeholder="1111 3455 4444 5555">
+    <label for="Expiry-Data" class="label">Data de Expiração</label>
+    <input type="date" id="Expiry-Data" class="input" placeholder="01/24">
+    <label for="CVV" class="label">CVV</label>
+    <input type="text" id="CVV" class="input" placeholder="123">
     <div class="modal-actions">
       <button class="btn" onclick="confirmTransaction()">Confirmar</button>
       <button class="btn" onclick="closeModal()">Fechar</button>
@@ -69,25 +75,35 @@
   <div id="modal-withdraw" class="modal">
     <p>Como deseja receber seu dinheiro?</p>
     <div class="button-group">
-      <input type="radio" id="pix" name="type-of-transaction" class="radio-input" checked>
+      <input type="radio" id="pix" name="type-of-transaction" class="radio-input" checked onclick="updateWithdrawFields()">
       <label for="pix" class="btn">Pix</label>
-      <input type="radio" id="Transferencia-Bancaria" name="type-of-transaction" class="radio-input">
+      <input type="radio" id="Transferencia-Bancaria" name="type-of-transaction" class="radio-input" onclick="updateWithdrawFields()">
       <label for="Transferencia-Bancaria" class="btn">Transferência Bancária</label>
     </div>
-    <div>
-      <label for="bank" class="label">Banco:</label>
-      <input id="bank" class="input" type="text" placeholder="Banco do Brasil, Sicredi" required>
+  
+    <!-- Campos para Pix -->
+    <div id="pix-fields" class="withdraw-fields">
+      <label for="cpf" class="label">CPF:</label>
+      <input id="cpf" class="input" type="text" placeholder="000.000.000-00" required>
     </div>
-    <div>
-      <label for="agency" class="label">Agência / Número de Conta Corrente:</label>
-      <input id="agency" class="input" type="text" placeholder="Por exemplo: 1000/10001-1" required>
+  
+    <!-- Campos para Transferência Bancária -->
+    <div id="bank-fields" class="withdraw-fields hidden">
+      <div>
+        <label for="bank" class="label">Banco:</label>
+        <input id="bank" class="input" type="text" placeholder="Banco do Brasil, Sicredi" required>
+      </div>
+      <div>
+        <label for="agency" class="label">Agência / Número de Conta Corrente:</label>
+        <input id="agency" class="input" type="text" placeholder="Por exemplo: 1000/10001-1" required>
+      </div>
     </div>
+  
     <div class="modal-actions">
       <button class="btn" onclick="confirmTransaction()">Confirmar</button>
       <button class="btn" onclick="closeModal()">Fechar</button>
     </div>
   </div>
-
   <div id="modal-backdrop" class="modal-backdrop"></div>
 
   <script src="wallet.js"></script>
