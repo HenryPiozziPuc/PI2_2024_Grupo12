@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     try {
       // Requisição para pegar o CPF do usuário associado ao token
-      const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
+      const cpfResponse = await fetch('http://localhost:3000/getUserInfoByToken', {
         method: 'GET',
         headers: {
           'token': token
@@ -83,26 +83,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Exemplo de atualização do saldo após a adição de fundos
-const updateBalance = async () => {
-  try {
-    const response = await fetch('http://localhost:3000/getWalletBalance', {
-      method: 'GET',
-      headers: {
-        'token': localStorage.getItem('authToken') // Passa o token para autenticação
-      }
-    });
-    const wallet = await response.json();
-    if (wallet.balance !== undefined) {
-      const formattedBalance = `R$ ${wallet.balance.toFixed(2).replace('.', ',')}`;
-      document.getElementById('balance').textContent = formattedBalance; // Atualiza o saldo na página
-    }
-  } catch (error) {
-    console.error('Erro ao atualizar saldo:', error);
-  }
-};
-
-
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Função para pegar o CPF do usuário
@@ -114,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/getCPFbyToken', {
+      const response = await fetch('http://localhost:3000/getUserInfoByToken', {
         method: 'GET',
         headers: {
           'token': token,
@@ -128,7 +108,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     } catch (error) {
       console.error("Erro ao obter CPF:", error);
-      alert("Erro ao recuperar o CPF.");
       return null;
     }
   };
@@ -162,8 +141,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       expiryDate: expiryDate,
       cvv: cvv
     };
-
-    console.log(addFundsData);
     
 
     // Fazendo a requisição para adicionar fundos
@@ -213,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/getCPFbyToken', {
+      const response = await fetch('http://localhost:3000/getUserInfoByToken', {
         method: 'GET',
         headers: {
           'token': token,
@@ -282,8 +259,6 @@ const confirmWithdraw = async () => {
     agency: agency, // Agência / Número da conta
     accountNumber: accountNumber
   };
-
-  console.log(withdrawDataAccountBank);
 
   try {
     let response;

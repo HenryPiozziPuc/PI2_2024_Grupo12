@@ -22,6 +22,7 @@ routes.get('/', (req: Request, res: Response) => {
 routes.post('/login', AccountsManager.loginHandler);
 routes.post('/signUp', AccountsManager.SignUpHandler);
 routes.put('/logout', AccountsManager.LogoutHandler);
+routes.get('/getUserInfoByToken', AccountsManager.GetUserInfoByTokenHandler);
 
 // Bets
 routes.post('/betOnEvent', BetsManager.BetOnEventHandler);
@@ -33,17 +34,12 @@ routes.get('/getBets', BetsManager.GetBetsHandler);
 routes.put('/addNewEvent', EventsManager.addNewEventHandler);
 routes.get('/getEvents', EventsManager.getEventsHandler);
 routes.put ('/deleteEvent', EventsManager.updateEventStatusHandler);
-routes.post('/evaluateNewEvent', EventsManager.evaluateEventHandler);
+routes.put('/evaluateNewEvent', EventsManager.evaluateEventHandler);
 
 // Financial
 routes.put('/addFunds', FinancialManager.AddFundsHandler);
 routes.put('/withdrawFunds', FinancialManager.withdrawFundsHandler);
-
-// Wallet
 routes.get('/getWalletBalance', FinancialManager.getWalletBalanceHandler);
-
-// GetCPF
-routes.get('/getCPFbyToken', AccountsManager.GetCpfByTokenHandler);
 
 server.use(routes);
 

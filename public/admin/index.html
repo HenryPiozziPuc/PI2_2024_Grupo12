@@ -9,10 +9,10 @@
     content="Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras.">
 
   <!-- CSS-->
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 
   <!-- Favicon -->
-  <link rel="shortcut icon" href="assets/images/logo/logo-single.png" type="image/x-icon">
+  <link rel="shortcut icon" href="../assets/images/logo/logo-single.png" type="image/x-icon">
 </head>
 
 <body>
@@ -46,7 +46,7 @@
     <div class="container">
       <nav class="padding-header navbar">
         <div class="logo">
-          <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
+          <img src="../assets/images/logo/puclogo.png" alt="Logo" srcset="">
         </div>
         <div class="d-flex row gap-10">
           <a id="openModalSignIn" class="modal-btn-SignIn">
@@ -65,21 +65,17 @@
     <div class="container">
       <nav class="padding-header navbar">
         <div class="logo">
-          <img src="assets/images/logo/puclogo.png" alt="Logo" srcset="">
+          <img src="../assets/images/logo/puclogo.png" alt="Logo" srcset="">
         </div>
         <div class="d-flex row gap-10">
           <div id="balance-display" class="btn currency d-flex">
             <div id="balance-amount"></div>
             <div style="margin-left: 5px;">
-              <img src="assets/images/real.svg" alt="">
+              <img src="../assets/images/real.svg" alt="">
             </div>
           </div>
-          
           <a href="carteira/">
             <div class="btn signup">Carteira</div>
-          </a>
-          <a href="account/">
-            <div class="btn account">Minha Conta</div>
           </a>
           <a id="logoutButton" href="#">
             <div class="btn logout">Sair</div>
@@ -94,11 +90,11 @@
       <div class="welcome-content">
         <!-- Título de boas-vindas -->
         <div class="welcome-title">
-          <div id="welcome-message"></div>
+          <div id="welcome-message">Welcome to PUC BET!</div>
         </div>
 
         <!-- Subtítulo explicativo -->
-        <div class="welcome-subtitle" id="welcome-message-desc"></div>
+        <div class="welcome-subtitle">Faça seu cadastro, deposite qualquer valor e começe a apostar!</div>
 
         <!-- Etapas do processo -->
         <div class="steps-container">
@@ -172,28 +168,6 @@
     </div>
   </section>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const token = localStorage.getItem("authToken"); // Pegando o token do localStorage
-        const welcomeMessage = document.getElementById("welcome-message"); // Elemento para a mensagem de boas-vindas
-        const welcomeMessageDesc = document.getElementById("welcome-message-desc"); // Elemento para a mensagem de boas-vindas
-        const signupButton = document.getElementById("signup-button"); // Botão de cadastro
-
-        // Verificando se o usuário está logado
-        if (token) {
-            // Usuário logado
-            welcomeMessage.innerHTML = "Bem vindo ao PUC BET, você está logado!"; // Texto para usuário logado
-            welcomeMessageDesc.innerHTML = "Deposite qualquer valor e começe a apostar!"; // Texto para usuário logado
-            signupButton.innerHTML = "Deposite"; // Texto do botão para usuário logado
-        } else {
-            // Usuário não logado
-            welcomeMessage.innerHTML = "Bem-vindo ao PUC BET, visitante!"; // Texto para usuário não logado
-            welcomeMessageDesc.innerHTML = "Faça seu cadastro, deposite qualquer valor e começe a apostar!"; // Texto para usuário não logado
-            signupButton.innerHTML = "Cadastre-se"; // Texto do botão para usuário não logado
-        }
-    });
-  </script>
-
 
   <section id="search-event">
     <div class="container pd-0">
@@ -220,6 +194,24 @@
           <div class="btn signup">Criar um novo evento</div>
         </a>
       </div>
+      <div class="category-wrapper">
+        <div class="categories" style="overflow: visible;">
+          <div class="category-list">
+            <div class="category-item-wrapper" style="height: 33px;">
+              <div class="category-item" style="height: 33px;">
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
+                  </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Os eventos serão exibidos aqui -->
       <div class="cards-container" id="events-container-all"></div>
     </div>
@@ -228,6 +220,24 @@
     <div class="container">
       <div class="title">
         🔥 Eventos mais apostados
+      </div>
+      <div class="category-wrapper">
+        <div class="categories" style="overflow: visible;">
+          <div class="category-list">
+            <div class="category-item-wrapper" style="height: 33px;">
+              <div class="category-item" style="height: 33px;">
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
+                  </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- Os eventos serão exibidos aqui -->
       <div class="cards-container" id="events-container-bets"></div>
@@ -238,6 +248,24 @@
       <div class="title">
         ⏳ Eventos próximos de vencerem
       </div>
+      <div class="category-wrapper">
+        <div class="categories" style="overflow: visible;">
+          <div class="category-list">
+            <div class="category-item-wrapper" style="height: 33px;">
+              <div class="category-item" style="height: 33px;">
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
+                  </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Os eventos serão exibidos aqui -->
       <div class="cards-container" id="events-container-finishing"></div>
     </div>
@@ -247,6 +275,24 @@
       <div class="title">
         🔠 Categorias especificas de eventos
       </div>
+      <div class="category-wrapper">
+        <div class="categories" style="overflow: visible;">
+          <div class="category-list">
+            <div class="category-item-wrapper" style="height: 33px;">
+              <div class="category-item" style="height: 33px;">
+                <div class="category-buttons">
+                  <div class="category-button active">
+                    <div class="button-text">Eventos esportivos</div>
+                  </div>
+                  <div class="category-button inactive">
+                    <div class="button-text">Eventos Políticos</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- Os eventos serão exibidos aqui -->
       <div class="cards-container" id="events-container-category"></div>
     </div>
@@ -255,7 +301,7 @@
     <div class="container">
       <div class="text-center">
         <div class="logo-footer mb-40">
-          <img src="assets/images/logo/puclogo.png" style="width: 8rem;" alt="">
+          <img src="../assets/images/logo/puclogo.png" style="width: 8rem;" alt="">
         </div>
         <div class="text-footer">
           <h4> Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas
@@ -282,7 +328,7 @@
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModal">&times;</span>
       <div class="logo mb-30">
-        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+        <img src="../assets/images/logo/puclogo.png" alt="" srcset="">
       </div>
       <div class="event-name" style="margin: 26px 0;">
         <div class="title">
@@ -333,7 +379,7 @@
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModalSignIn">&times;</span>
       <div class="logo mb-30">
-        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+        <img src="../assets/images/logo/puclogo.png" alt="" srcset="">
       </div>
       <div class="event-name" style="margin: 26px 0;">
         <div class="title">
@@ -360,7 +406,7 @@
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModalSignUp">&times;</span>
       <div class="logo mb-30">
-        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+        <img src="../assets/images/logo/puclogo.png" alt="" srcset="">
       </div>
       <div class="event-name" style="margin: 26px 0;">
         <div class="title">
@@ -399,7 +445,7 @@
     <div class="modal-content text-center">
       <span class="close-btn" id="closeModalBetOnEvent">&times;</span>
       <div class="logo mb-30">
-        <img src="assets/images/logo/puclogo.png" alt="" srcset="">
+        <img src="../assets/images/logo/puclogo.png" alt="" srcset="">
       </div>
       <div class="event-name" style="margin: 26px 0;">
         <div class="title"></div>
@@ -427,7 +473,6 @@
             <label for="no">Não</label>
           </div>
         </div>
-
         <!-- Quantas cotas você quer comprar? -->
         <div class="event-quota pd-top-30">
           <p>Qual o número de cotas que deseja apostar?</p>
@@ -441,10 +486,8 @@
       </form>
     </div>
   </div>
-
-
 </body>
 <!-- JavaScript -->
-<script src="assets/js/main.js"></script>
+<script src="../assets/js/main.js"></script>
 
 </html>

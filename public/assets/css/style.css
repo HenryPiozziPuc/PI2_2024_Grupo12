@@ -133,6 +133,7 @@ margin-top: 1.5em;
     width: 0;
 }
 }
+
 /* Global Styles */
 body {
     margin: 0;
@@ -241,7 +242,19 @@ input::placeholder {
 
 .pd-bottom-40 {
     padding-bottom: 40px;
-}   
+}
+
+.m-0 {
+    margin: 0;
+}
+
+.m-10 {
+    margin: 10px;
+}
+
+.m-20 {
+    margin: 20px;
+}
 
 .mb-0 {
     margin-bottom: 0 !important;
@@ -462,6 +475,12 @@ h6 {
     background-color: transparent;
     color: rgb(255, 255, 255);
     text-align: right;
+}
+
+.btn.account {
+    background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+    border: 1px solid rgb(54 28 145);
+    color: white;
 }
 
 .btn.logout {
@@ -999,4 +1018,188 @@ text-decoration: underline;
 
 .event-description.two p {
     padding: 0 0 26px;
+}
+
+
+
+
+/*User profile*/
+
+.user-profile {
+    padding: 30px 0;
+    border: 1px solid #323b45;
+    border-left: 0;
+    border-right: 0;
+}
+
+.user-profile-list {
+    display: flex;
+    justify-content: center;
+    gap: 90px;
+}
+.user-profile a {
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+}
+
+
+
+
+
+/* Estilo do cartão principal */
+
+.account-content.to-account {
+    flex-grow: 1;
+    align-items: center;
+}
+
+.account-container {
+    background: linear-gradient(223.7deg, #3b454e -0.11%, #131b24 50.01%);
+    color: #ffffff;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    margin: 0 auto;
+    padding: 46px 28px 53px;
+    font-style: normal;
+}
+
+/* Conteúdo do cartão de boas-vindas */
+.account-content {
+    padding: 32px 24px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    row-gap: 26px;
+    /* Espaçamento entre elementos */
+    flex-grow: 0.5;
+}
+
+/* Estilos animados para o perfil do usuário */
+#profileSection {
+    opacity: 0; /* Inicialmente invisível */
+    transform: translateY(20px); /* Inicialmente deslocado para baixo */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Transição suave */
+}
+
+#profileSection.visible {
+    opacity: 1; /* Tornar visível */
+    transform: translateY(0); /* Voltar à posição original */
+}
+
+
+/* Estilos animados para o histórico de apostas */
+#betHistorySection {
+    opacity: 0; /* Inicialmente invisível */
+    transform: translateY(20px); /* Inicialmente deslocado para baixo */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Transição suave */
+}
+
+#betHistorySection.visible {
+    opacity: 1; /* Tornar visível */
+    transform: translateY(0); /* Voltar à posição original */
+}
+
+
+/* Cabeçalho de boas-vindas */
+.account-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Subtítulo do cartão */
+.account-subtitle {
+    font-size: 16px;
+    color: #8c9099;
+    margin-bottom: 20px;
+}
+
+/* Container para seções menores */
+.account-steps-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Ícone e descrição de cada etapa */
+.account-step-description {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Texto de descrição */
+.account-step-text {
+    color: #8c9099;
+    font-size: 14px;
+}
+
+
+.account-title.line, .account-infos.line {
+    border-bottom: 1px solid #323b45;
+    padding: 0 80px 25px;
+    margin: 20px 0 0 0;
+}
+
+.account-infos {
+    text-align: center;
+}
+
+.account-infos h5 {
+    margin: 0 0 20px 0;
+}
+
+.bet-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.bet-history-table .head {
+  background:linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%);
+}
+
+.bet-history-table th {
+  text-align: center;
+  padding: 12px;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.bet-history-table th:nth-child(1) {
+    border-radius: 1rem 0 0 1rem;
+  }
+
+  .bet-history-table th:nth-child(3) {
+    border-radius: 0 1rem 1rem 0;
+  }
+
+
+.bet-history-table td {
+  padding: 25px 12px 25px;
+}
+
+.bet-history-table tr {
+  border-bottom: 1px solid #323b45;
+  text-align: center;
+}
+
+.bet-history-table tr:last-child {
+  border-bottom: none;
+}
+
+.account-history {
+    width: 70%;
 }

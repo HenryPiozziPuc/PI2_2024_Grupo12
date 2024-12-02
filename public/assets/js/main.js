@@ -1,26 +1,57 @@
-/* Get Events: Busca os eventos */
+/* Busca de eventos por FILTROS */
 document.addEventListener("DOMContentLoaded", () => {
   // Containers específicos para cada filtro
   const allEventsContainer = document.getElementById("events-container-all");
   const groupedByCategoryContainer = document.getElementById("events-container-category");
   const mostBetsContainer = document.getElementById("events-container-bets");
   const finishingContainer = document.getElementById("events-container-finishing");
+  const eventCreatedByUserContainer = document.getElementById("event_created_by_user");
+
+  // Função para obter as informações do usuário
+  const getUserInfo = async () => {
+    const token = localStorage.getItem("authToken"); // Pegando o token do localStorage
+
+    if (token) {
+      try {
+        const response = await fetch('http://localhost:3000/getUserInfoByToken', {
+          method: 'GET',
+          headers: {
+            'token': token
+          }
+        });
+
+        const data = await response.json();
+        return data; // Retorna as informações completas do usuário
+      } catch (error) {
+        console.error('Erro ao obter informações do usuário:', error);
+        return null;
+      }
+    }
+  };
 
   // Função genérica para buscar eventos
-  const fetchEvents = async (filter) => {
+  const fetchEvents = async (filter, userInfo = null) => {
     try {
+      const headers = {
+        "Content-Type": "application/json",
+        "filter": filter
+      };
+
+      if (userInfo && userInfo.cpf) {
+        headers["cpf"] = userInfo.cpf; // Passa o CPF se o usuário estiver logado
+      }
+
       const response = await fetch("http://localhost:3000/getEvents", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "filter": filter,
-        },
+        headers: headers,
       });
+
       if (!response.ok) throw new Error(`Erro ao buscar eventos (${filter}).`);
+
       const events = await response.json();
       renderEvents(events, filter);
     } catch (error) {
-      console.error(`Erro ao carregar eventos (${filter}):`, error);
+      console.error(`Erro ao carregar eventos (${filter}):`, error); // Adiciona o log do erro aqui
       renderError(filter);
     }
   };
@@ -40,6 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "finalizando":
         container = finishingContainer;
+        break;
+      case "event_created_by_user":
+        container = eventCreatedByUserContainer;
         break;
     }
 
@@ -84,19 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML += eventCard;
     });
 
-    // Adicionar listener para abrir o modal
-    container.querySelectorAll('.event-details-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();  // Previne o comportamento de navegação
-
-        // Captura o ID do evento
-        const eventId = e.target.closest('a').getAttribute('data-event-id');
-        console.log("Event ID:", eventId); // Certifique-se de que o ID está sendo capturado corretamente
-        openModal(eventId);
-      });
-    });
-
-
     // Agora inicializamos o IntersectionObserver
     animateCardsOnVisibility(container);
   };
@@ -117,6 +138,9 @@ document.addEventListener("DOMContentLoaded", () => {
       case "finalizando":
         container = finishingContainer;
         break;
+      case "event_created_by_user":
+        container = eventCreatedByUserContainer;
+        break;
     }
     container.innerHTML = "<p class='error'>Erro ao carregar eventos. Tente novamente mais tarde.</p>";
   };
@@ -132,6 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchEvents("agrupados_por_categoria");
   fetchEvents("mais_apostas");
   fetchEvents("finalizando");
+
+  // Busca eventos criados pelo usuário
+  getUserInfo().then((userInfo) => {
+    if (userInfo) {
+      fetchEvents("event_created_by_user", userInfo);
+    } else {
+      console.error('Informações do usuário não encontradas.');
+    }
+  });
 
   // Função que observa quando o card entra na tela e anima
   const animateCardsOnVisibility = (container) => {
@@ -154,149 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cards = container.querySelectorAll('.card:not(.visible)');
     cards.forEach(card => observer.observe(card));
   };
-});
-
-/*** Modal de apostas */
-document.addEventListener("DOMContentLoaded", () => {
-  const betOnEventModal = document.getElementById("betOnEventModal");
-  const closeModalBetOnEvent = document.getElementById("closeModalBetOnEvent");
-  const betOnEventForm = document.getElementById("betOnEventForm");
-
-  // Função para pegar o CPF do usuário
-  const getUserCpf = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      alert("Você precisa estar logado para apostar.");
-      return null;
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/getCPFbyToken', {
-        method: 'GET',
-        headers: {
-          'token': token,
-        }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        return data.cpf;
-      } else {
-        throw new Error(data.message || "Erro ao obter CPF.");
-      }
-    } catch (error) {
-      console.error("Erro ao obter CPF:", error);
-      alert("Erro ao recuperar o CPF.");
-      return null;
-    }
-  };
-
-  // Função para fazer a aposta
-  const placeBet = async (event) => {
-    event.preventDefault();  // Previne o comportamento padrão do formulário (recarregar a página)
-
-    const eventId = document.getElementById("betOnEventButton").getAttribute("data-event-id");
-
-    if (!eventId) {
-      alert("ID do evento não encontrado.");
-      return;
-    }
-
-    const userCpf = await getUserCpf();
-    if (!userCpf) return;  // Se não conseguir pegar o CPF, não faz a aposta
-
-    const choiceInput = document.querySelector('input[name="eventBetStatus"]:checked');
-    let choice = 0; // Valor padrão para "não"
-
-    if (choiceInput) {
-      choice = choiceInput.value === 'yes' ? 1 : 0; // Define 1 para "sim", 0 para "não"
-    }
-
-    const quotaAmount = parseFloat(document.getElementById("betOnEventquota").value);
-
-    if (!quotaAmount || quotaAmount <= 0) {
-      alert("Por favor, insira um valor válido para a quantidade de cotas.");
-      return;
-    }
-
-    const betData = {
-      cpf: userCpf,
-      eventId: eventId,
-      quotaAmount: quotaAmount,
-      choice: choice, // Certifica-se de que o valor é numérico (0 ou 1)
-    };
-
-    // Debug
-    console.log("Bet Data:", betData);
-
-    try {
-      const response = await fetch('http://localhost:3000/betOnEvent', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "cpf": betData.cpf.toString(),
-          "eventId": betData.eventId.toString(),
-          "quotaAmount": betData.quotaAmount.toString(),
-          "choice": betData.choice.toString()
-        }
-      });
-
-      const result = await response.json(); // Aqui espera-se que a resposta seja um JSON
-      if (response.ok) {
-        alert(result.message);
-        betOnEventModal.style.display = "none"; // Fecha o modal
-        betOnEventForm.reset();
-      } else {
-        alert(result.message || "Erro ao realizar a aposta.");
-      }
-    } catch (error) {
-      console.error("Erro ao fazer a aposta:", error);
-      alert("Erro ao fazer a aposta. Tente novamente." + error);
-    }
-
-  };
-
-  // Lida com o clique para abrir o modal
-  document.addEventListener("click", (event) => {
-    if (event.target.closest(".event-details-link")) {
-      event.preventDefault(); // Impede a navegação padrão
-
-      const eventCard = event.target.closest(".card");
-      if (eventCard) {
-        // Captura o ID do evento diretamente do link (data-event-id)
-        const eventId = eventCard.querySelector(".event-details-link").getAttribute("data-event-id");
-        console.log("Event ID:", eventId); // Verifique se o ID está sendo capturado corretamente
-
-        // Preenche as informações no modal
-        const eventName = eventCard.querySelector(".cat-name").innerText;
-        const eventDescription = eventCard.querySelector(".event-question").innerText;
-        const eventDescription2 = eventCard.querySelector(".event-question.two").innerText;
-
-        document.querySelector("#betOnEventModal .event-name .title").innerText = eventName;
-        document.querySelector("#betOnEventModal .event-description.one p").innerText = eventDescription;
-        document.querySelector("#betOnEventModal .event-description.two p").innerText = eventDescription2;
-
-        // Atribui o ID do evento ao botão de aposta
-        document.getElementById("betOnEventButton").setAttribute("data-event-id", eventId);
-
-        betOnEventModal.style.display = "flex"; // Abre o modal
-      }
-    }
-  });
-
-  // Lida com o clique para fechar o modal
-  closeModalBetOnEvent.addEventListener("click", () => {
-    betOnEventModal.style.display = "none";
-  });
-
-  // Fecha o modal ao clicar fora do conteúdo
-  window.addEventListener("click", (event) => {
-    if (event.target === betOnEventModal) {
-      betOnEventModal.style.display = "none";
-    }
-  });
-
-  // Quando o formulário for enviado
-  betOnEventForm.addEventListener("submit", placeBet);
 });
 
 /* Add Event Fetch Requisition */
@@ -335,14 +225,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // Requisição para pegar o CPF do usuário associado ao token
-      const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
+      const cpfResponse = await fetch('http://localhost:3000/getUserInfoByToken', {
         method: 'GET',
         headers: {
           'token': token
         }
       });
 
-      const cpfResult = await cpfResponse.json();
+      const cpfResult = await cpfResponse.json(); // !!
+
       if (!cpfResult.cpf) {
         throw new Error('CPF não encontrado');
       }
@@ -510,50 +401,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-/* Modal: Sign In */
-document.addEventListener('DOMContentLoaded', () => {
-  const openModalSignIn = document.getElementById('openModalSignIn');
-  const signInModal = document.getElementById('signInModal');
-  const closeModalSignIn = document.getElementById('closeModalSignIn');
-
-  openModalSignIn.addEventListener('click', () => {
-    signInModal.style.display = 'flex';
-  });
-
-
-  closeModalSignIn.addEventListener('click', () => {
-    signInModal.style.display = 'none';
-  });
-
-  window.addEventListener('click', (event) => {
-    if (event.target === signInModal) {
-      signInModal.style.display = 'none';
-    }
-  });
-});
-
-/* Modal: Sign Up */
-document.addEventListener('DOMContentLoaded', () => {
-  const openModalSignUp = document.getElementById('openModalSignUp');
-  const signUpModal = document.getElementById('signUpModal');
-  const closeModalSignUp = document.getElementById('closeModalSignUp');
-
-  openModalSignUp.addEventListener('click', () => {
-    signUpModal.style.display = 'flex';
-  });
-
-
-  closeModalSignUp.addEventListener('click', () => {
-    signUpModal.style.display = 'none';
-  });
-
-  window.addEventListener('click', (event) => {
-    if (event.target === signUpModal) {
-      signUpModal.style.display = 'none';
-    }
-  });
-});
-
 /* Login Fetch Requisition */
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("SignInForm");
@@ -582,8 +429,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Armazenar o token e a role no localStorage
         localStorage.setItem("authToken", result.token);  // Armazenar o token
         localStorage.setItem("userRole", result.role);    // Armazenar a role
-        console.log(result.role);
-        console.log(result.token);
         alert(`${result.message}`);
         window.location.reload();
       } else {
@@ -603,7 +448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (token) {
     try {
       // Requisição para pegar o CPF do usuário associado ao token
-      const cpfResponse = await fetch('http://localhost:3000/getCPFbyToken', {
+      const cpfResponse = await fetch('http://localhost:3000/getUserInfoByToken', {
         method: 'GET',
         headers: {
           'token': token
@@ -611,6 +456,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const cpfResult = await cpfResponse.json();
+
       if (!cpfResult.cpf) {
         throw new Error('CPF não encontrado');
       }
@@ -636,18 +482,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Exibir o saldo formatado
       const formattedBalance = `R$ ${walletResult.balance.toFixed(2).replace('.', ',')}`;
       document.getElementById('balance-amount').textContent = formattedBalance;
-
-      // Agora, exibe o nome do usuário e altera o botão para "Depositar"
-      const userNameElement = document.getElementById('user-name');
-      const welcomeMessage = document.getElementById('welcome-message');
-      const signupButton = document.getElementById('signup-button');
-
-      // Atualiza a interface com o nome do usuário e altera o botão de cadastro
-      welcomeMessage.innerHTML = `Welcome to PUC BET!`;
-      signupButton.innerHTML = 'Depositar'; // Substitui o botão de "Cadastrar-se" por "Depositar"
-
-      // Atualiza o subtítulo para refletir a mudança solicitada
-      document.querySelector('.welcome-subtitle').textContent = 'Deposite qualquer valor e comece a apostar!';
+      document.getElementById('balance-amount2').textContent = formattedBalance;
 
     } catch (error) {
       console.error('Erro ao obter dados do usuário:', error);
@@ -656,16 +491,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Caso o token não esteja presente, o cabeçalho de login será exibido
     document.getElementById('header-logged-out').style.display = 'block';
     document.getElementById('header-logged-in').style.display = 'none';
-
-    // Atualiza a interface para o estado de não logado
-    const welcomeMessage = document.getElementById('welcome-message');
-    const signupButton = document.getElementById('signup-button');
-
-    welcomeMessage.innerHTML = `Welcome to PUC BET!`;
-    signupButton.innerHTML = 'Cadastre-se'; // Exibe o botão de cadastro novamente
-
-    // Altera o subtítulo de boas-vindas para o estado de não logado
-    document.querySelector('.welcome-subtitle').textContent = 'Faça seu cadastro, deposite qualquer valor e comece a apostar!';
   }
 });
 
@@ -716,17 +541,12 @@ document.getElementById('SignUpForm').addEventListener('submit', async function 
     console.error('Erro ao enviar a requisição:', error);
     alert('Ocorreu um erro. Tente novamente mais tarde.');
   }
+  document.getElementById('signUpModal').addEventListener('show', () => {
+    document.getElementById('SignUpForm').reset();
+  });
 });
-
-document.getElementById('signUpModal').addEventListener('show', () => {
-  document.getElementById('SignUpForm').reset();
-});
-
-
 
 /* Logout Fetch Requisition */
-
-// Adicionando evento de clique no botão
 document.getElementById('logoutButton').addEventListener('click', async (event) => {
   event.preventDefault(); // Previne o comportamento padrão do link
   
@@ -762,3 +582,191 @@ document.getElementById('logoutButton').addEventListener('click', async (event) 
     alert('Erro ao conectar ao servidor.');
   }
 });
+
+/* Modal: Sign In */
+document.addEventListener('DOMContentLoaded', () => {
+  const openModalSignIn = document.getElementById('openModalSignIn');
+  const signInModal = document.getElementById('signInModal');
+  const closeModalSignIn = document.getElementById('closeModalSignIn');
+
+  openModalSignIn.addEventListener('click', () => {
+    signInModal.style.display = 'flex';
+  });
+
+
+  closeModalSignIn.addEventListener('click', () => {
+    signInModal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target === signInModal) {
+      signInModal.style.display = 'none';
+    }
+  });
+});
+
+/* Modal: Sign Up */
+document.addEventListener('DOMContentLoaded', () => {
+  const openModalSignUp = document.getElementById('openModalSignUp');
+  const signUpModal = document.getElementById('signUpModal');
+  const closeModalSignUp = document.getElementById('closeModalSignUp');
+
+  openModalSignUp.addEventListener('click', () => {
+    signUpModal.style.display = 'flex';
+  });
+
+
+  closeModalSignUp.addEventListener('click', () => {
+    signUpModal.style.display = 'none';
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target === signUpModal) {
+      signUpModal.style.display = 'none';
+    }
+  });
+});
+
+/*** Modal de apostas */
+document.addEventListener("DOMContentLoaded", () => {
+  const betOnEventModal = document.getElementById("betOnEventModal");
+  const closeModalBetOnEvent = document.getElementById("closeModalBetOnEvent");
+  const betOnEventForm = document.getElementById("betOnEventForm");
+
+  // Função para pegar o CPF do usuário
+  const getUserCpf = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert("Você precisa estar logado para apostar.");
+      return null;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/getUserInfoByToken', {
+        method: 'GET',
+        headers: {
+          'token': token,
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        return data.cpf;
+      } else {
+        throw new Error(data.message || "Erro ao obter CPF.");
+      }
+    } catch (error) {
+      console.error("Erro ao obter CPF:", error);
+      alert("Erro ao recuperar o CPF.");
+      return null;
+    }
+  };
+
+  // Função para fazer a aposta
+  const placeBet = async (event) => {
+    event.preventDefault();  // Previne o comportamento padrão do formulário (recarregar a página)
+
+    const eventId = document.getElementById("betOnEventButton").getAttribute("data-event-id");
+
+    if (!eventId) {
+      alert("ID do evento não encontrado.");
+      return;
+    }
+
+    const userCpf = await getUserCpf();
+    if (!userCpf) return;  // Se não conseguir pegar o CPF, não faz a aposta
+
+    const choiceInput = document.querySelector('input[name="eventBetStatus"]:checked');
+    let choice = 0; // Valor padrão para "não"
+
+    if (choiceInput) {
+      choice = choiceInput.value === 'yes' ? 1 : 0; // Define 1 para "sim", 0 para "não"
+    }
+
+    const quotaAmount = parseFloat(document.getElementById("betOnEventquota").value);
+
+    if (!quotaAmount || quotaAmount <= 0) {
+      alert("Por favor, insira um valor válido para a quantidade de cotas.");
+      return;
+    }
+
+    const betData = {
+      cpf: userCpf,
+      eventId: eventId,
+      quotaAmount: quotaAmount,
+      choice: choice, // Certifica-se de que o valor é numérico (0 ou 1)
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/betOnEvent', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "cpf": betData.cpf.toString(),
+          "eventId": betData.eventId.toString(),
+          "quotaAmount": betData.quotaAmount.toString(),
+          "choice": betData.choice.toString()
+        }
+      });
+
+      const result = await response.json(); // Aqui espera-se que a resposta seja um JSON
+      if (response.ok) {
+        alert(result.message);
+        betOnEventModal.style.display = "none"; // Fecha o modal
+        betOnEventForm.reset();
+      } else {
+        alert(result.message || "Erro ao realizar a aposta.");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer a aposta:", error);
+      alert("Erro ao fazer a aposta. Tente novamente." + error);
+    }
+
+  };
+
+  // Lida com o clique para abrir o modal
+  document.addEventListener("click", (event) => {
+    if (event.target.closest(".event-details-link")) {
+      event.preventDefault(); // Impede a navegação padrão
+
+      const eventCard = event.target.closest(".card");
+      if (eventCard) {
+        // Captura o ID do evento diretamente do link (data-event-id)
+        const eventId = eventCard.querySelector(".event-details-link").getAttribute("data-event-id");
+
+        // Preenche as informações no modal
+        const eventName = eventCard.querySelector(".cat-name").innerText;
+        const eventDescription = eventCard.querySelector(".event-question").innerText;
+        const eventDescription2 = eventCard.querySelector(".event-question.two").innerText;
+
+        document.querySelector("#betOnEventModal .event-name .title").innerText = eventName;
+        document.querySelector("#betOnEventModal .event-description.one p").innerText = eventDescription;
+        document.querySelector("#betOnEventModal .event-description.two p").innerText = eventDescription2;
+
+        // Atribui o ID do evento ao botão de aposta
+        document.getElementById("betOnEventButton").setAttribute("data-event-id", eventId);
+
+        betOnEventModal.style.display = "flex"; // Abre o modal
+      }
+    }
+  });
+
+  // Lida com o clique para fechar o modal
+  closeModalBetOnEvent.addEventListener("click", () => {
+    betOnEventModal.style.display = "none";
+  });
+
+  // Fecha o modal ao clicar fora do conteúdo
+  window.addEventListener("click", (event) => {
+    if (event.target === betOnEventModal) {
+      betOnEventModal.style.display = "none";
+    }
+  });
+
+  // Quando o formulário for enviado
+  betOnEventForm.addEventListener("submit", placeBet);
+});
+
+
+
+
+

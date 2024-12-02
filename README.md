@@ -1,38 +1,42 @@
-# Template para criar backends usando express
+# Integrating Project II
 
-Este é um projeto apenas de "esqueleto" para você criar seu backend em TypeScript usando express.
+O **Integrating Project II** para o 2º semestre da PUC Campinas envolve o desenvolvimento de uma plataforma inovadora de apostas.
 
-## Instalando as dependências
+## 🛠️ Instalando as Dependências
 
-Ao fazer o clone do repositório, basta rodar o comando: 
+Clone o repositório e instale as dependências com o comando:
 
-```
+```bash
 npm install
 ```
-O comando acima instalará todas as dependências que constam no arquivo package.json.
 
-## Iniciando o servidor
+Isso instalará todas as dependências listadas no arquivo `package.json`.
 
-Para garantir que seu código esteja funcionando, na raíz do projeto rode o comando: 
+## 🚀 Iniciando o Servidor
 
-```
-npm run build
-```
-Como consequência, será gerado o diretório build constando o arquivo server.js. 
+Para iniciar o servidor, execute o seguinte comando:
 
-Acesse o diretório onde está o arquivo server.js (build/src) e digite o comando
-```
-node server.js
-```
-
-## Usando o nodemon
-
-Em muitos casos não desejamos a todo momento ficar alterando nosso código e sempre digitando diversos comandos para testar aquilo que estamos fazendo. Pensando nisso, o projeto nodemon resolve esse problema. 
-
-Experimente o comando
-
-```
+```bash
 npm run dev
 ```
 
-Voilà!
+Após rodar o comando, será gerado o diretório `build`, contendo o arquivo `server.js`.
+
+## 🌐 Iniciando o Front-End
+
+Para rodar o front-end, siga os passos abaixo:
+
+1. Navegue até o diretório: `public/index.html`.
+2. Abra o arquivo no seu navegador usando o Live Server.
+3. Pronto! Agora você pode aproveitar o nosso **Projeto Integrador II**.
+
+## 👥 Integrantes
+
+- João Gabriel
+- Henry Piozzi
+- Gabriel Bonatto
+- Yuri Cardoso
+- Pedro Belinnetti
+- Rafael Farjallat
+
+-----

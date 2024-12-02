@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Account | Site de Apostas | Pontifícia Universidade Católica de Campinas</title>
+		<meta name="description" content="Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras.">
+		<!-- CSS-->
+		<link rel="stylesheet" href="../assets/css/style.css">
+		<!-- Favicon -->
+		<link rel="shortcut icon" href="../assets/images/logo/logo-single.png" type="image/x-icon">
+	</head>
+	<body>
+		<!-- Preloader -->
+		<div class="preloader-overlay" id="preloader">
+			<div class="preloader-content">
+				<div class="terminal-loader">
+					<div class="terminal-header">
+						<div class="terminal-title">Terminal</div>
+						<div class="terminal-controls">
+							<div class="control close"></div>
+							<div class="control minimize"></div>
+							<div class="control maximize"></div>
+						</div>
+					</div>
+					<div class="text">Loading...</div>
+				</div>
+			</div>
+		</div>
+		<script>
+			// Ocultar o preloader após 2 segundos do carregamento
+			window.addEventListener('load', () => {
+				const preloader = document.getElementById('preloader');
+				setTimeout(() => {
+					preloader.classList.add('hidden'); // Adiciona a classe para sumir
+				}, 2000);
+			});
+		</script>
+		<!-- Header caso o usuário não esteja logado -->
+		<header id="header-logged-out">
+			<div class="container">
+				<nav class="padding-header navbar">
+					<div class="logo">
+						<a href="/public/">
+							<img src="../assets/images/logo/puclogo.png" alt="Logo" srcset="">
+						</a>
+					</div>
+					<div class="d-flex row gap-10">
+						<a id="openModalSignIn" class="modal-btn-SignIn">
+							<div class="btn login">Entrar</div>
+						</a>
+						<a id="openModalSignUp" class="modal-btn-SignUp">
+							<div class="btn signup">Cadastre-se</div>
+						</a>
+					</div>
+				</nav>
+			</div>
+		</header>
+		<!-- Header caso o usuário esteja logado -->
+		<header id="header-logged-in" style="display: none;">
+			<div class="container">
+				<nav class="padding-header navbar">
+					<div class="logo">
+						<a href="/public/">
+							<img src="../assets/images/logo/puclogo.png" alt="Logo" srcset="">
+						</a>
+					</div>
+					<div class="d-flex row gap-10">
+						<div id="balance-display" class="btn currency d-flex">
+							<div id="balance-amount"></div>
+							<div style="margin-left: 5px;">
+								<img src="../assets/images/real.svg" alt="">
+							</div>
+						</div>
+						<a href="../carteira/">
+							<div class="btn signup">Carteira</div>
+						</a>
+						<a id="logoutButton" href="#">
+							<div class="btn logout">Sair</div>
+						</a>
+					</div>
+				</nav>
+			</div>
+		</header>
+		<script>
+			document.getElementById('logoutButton').addEventListener('click', async (event) => {
+				event.preventDefault(); // Previne o comportamento padrão do link
+				// Supondo que o token esteja armazenado no localStorage
+				const token = localStorage.getItem('authToken');
+				if (!token) {
+					alert('Usuário não autenticado.');
+					return;
+				}
+				try {
+					const response = await fetch('http://localhost:3000/logout', {
+						method: 'PUT',
+						headers: {
+							'Content-Type': 'application/json',
+							'token': token
+						}
+					});
+					const message = await response.json();
+					if (response.ok) {
+						alert(message.message);
+						// Limpando o localStorage
+						localStorage.clear();
+						// Redirecionando para a página inicial
+						window.location.href = '/public/';
+					} else {
+						const errorMessage = await response.text();
+						alert(`Erro ao fazer logout: ${errorMessage}`);
+					}
+				} catch (error) {
+					console.error('Erro na solicitação de logout:', error);
+					alert('Erro ao conectar ao servidor.');
+				}
+			});
+		</script>
+		<script>
+			document.addEventListener("DOMContentLoaded", () => {
+				const profileSection = document.getElementById("profileSection");
+				const observer = new IntersectionObserver((entries, observer) => {
+					entries.forEach(entry => {
+						if (entry.isIntersecting) {
+							// Adiciona um delay de 0.5s antes de aplicar a classe 'visible'
+							setTimeout(() => {
+								profileSection.classList.add("visible");
+							}, 2250);
+							// Para observar apenas uma vez
+							observer.unobserve(profileSection);
+						}
+					});
+				}, {
+					threshold: 0.1
+				}); // Ajuste o valor do threshold se necessário
+				observer.observe(profileSection);
+			});
+		</script>
+		<section id="userAccountDetails" class="m-0">
+			<div class="container">
+				<div class="user-profile">
+					<!-- Lista com Perfil, Histórico de Apostas e Eventos criados -->
+					<div class="user-profile-list d-flex justify-center">
+						<a href="#" id="profileBtn">Perfil</a>
+						<a href="#" id="betHistoryBtn">Histórico de Apostas</a>
+						<a href="#" id="eventsCreatedBtn">Seus eventos</a>
+					</div>
+				</div>
+			</div>
+		</section>
+		<script>
+			document.getElementById('profileBtn').addEventListener('click', function(event) {
+				event.preventDefault();
+				showSection('profileSection');
+			});
+			document.getElementById('betHistoryBtn').addEventListener('click', function(event) {
+				event.preventDefault();
+				showSection('betHistorySection');
+			});
+			document.getElementById('eventsCreatedBtn').addEventListener('click', function(event) {
+				event.preventDefault();
+				showSection('eventsCreatedSection');
+			});
+
+			function showSection(sectionId) {
+				// Esconde todas as seções
+				document.getElementById('profileSection').style.display = 'none';
+				document.getElementById('betHistorySection').style.display = 'none';
+				document.getElementById('eventsCreatedSection').style.display = 'none';
+				// Exibe a seção selecionada
+				document.getElementById(sectionId).style.display = 'block';
+			}
+		</script>
+		<!-- Perfil do usuário -->
+		<section id="profileSection">
+			<div class="container account-container">
+				<div class="account-content to-account">
+					<div class="account-title">
+						<div id="user-name">
+							<h3>Welcome to your account!</h3>
+						</div>
+					</div>
+					<div id="balance-display" class="btn currency d-flex">
+						<div id="balance-amount2"></div>
+						<div style="margin-left: 5px;">
+							<img src="../assets/images/real.svg" alt="">
+						</div>
+					</div>
+					<div class="account-title line">
+						<div id="account-user-message">Informações do seu perfil</div>
+					</div>
+					<div class="account-infos">
+						<div class="email">
+							<h5>Email: <span></span>
+							</h5>
+						</div>
+						<div class="telefone">
+							<h5>Telefone: <span></span>
+							</h5>
+						</div>
+						<div class="cpf">
+							<h5>CPF: <span></span>
+							</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<script>
+			// Função que será executada assim que a página carregar
+			document.addEventListener('DOMContentLoaded', async function() {
+				// Pegando o token do localStorage
+				const token = localStorage.getItem("authToken");
+				// Verificando se o token está presente
+				if (token) {
+					try {
+						// Requisição para pegar as informações do usuário associado ao token
+						const response = await fetch('http://localhost:3000/getUserInfoByToken', {
+							method: 'GET',
+							headers: {
+								'token': token
+							}
+						});
+						const result = await response.json();
+						// Verificando se a resposta foi bem-sucedida
+						if (response.ok) {
+							// Preenchendo as informações no HTML
+							document.getElementById('user-name').innerHTML = `Bem-vindo, ${result.completeName}!`;
+							document.getElementById('balance-amount2').innerHTML = "R$ " + (result.balance || 0); // Exemplo de como adicionar saldo
+							document.querySelector('.email span').innerText = result.email;
+							document.querySelector('.telefone span').innerText = result.phoneNumber;
+							document.querySelector('.cpf span').innerText = result.cpf;
+						} else {
+							// Caso a resposta tenha falhado
+							console.error('Erro:', result.message);
+							alert(result.message);
+						}
+					} catch (error) {
+						console.error('Erro de requisição:', error);
+					}
+				} else {
+					// Caso o token não esteja presente no localStorage
+					alert('Você precisa estar logado para acessar essa página.');
+					window.location.href = '/public/';
+				}
+			});
+		</script>
+		<!-- Histórico de Apostas -->
+		<section id="betHistorySection" style="display:none;">
+			<div class="container account-container">
+				<div class="account-content to-account">
+					<div class="account-title m-0">
+						<h3 class="m-0">Histórico de Apostas</h3>
+					</div>
+					<div class="account-history">
+						<table class="bet-history-table">
+							<thead>
+								<tr class="head">
+									<th>Nome do Evento</th>
+									<th>Quantia</th>
+									<th>Escolha</th>
+								</tr>
+							</thead>
+							<tbody>
+								<!-- As apostas serão inseridas aqui dinamicamente -->
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</section>
+		<script>
+			document.addEventListener("DOMContentLoaded", () => {
+				const betHistorySection = document.getElementById("betHistorySection");
+				const observer = new IntersectionObserver((entries, observer) => {
+					entries.forEach(entry => {
+						if (entry.isIntersecting) {
+							// Torna o elemento visível removendo o display:none
+							betHistorySection.style.display = "block";
+							// Adiciona um delay de 0.5s antes de aplicar a classe 'visible'
+							setTimeout(() => {
+								betHistorySection.classList.add("visible");
+							}, 170);
+							// Para observar apenas uma vez
+							observer.unobserve(betHistorySection);
+						}
+					});
+				}, {
+					threshold: 0.1
+				}); // Ajuste o valor do threshold se necessário
+				observer.observe(betHistorySection);
+				// Função para obter o CPF do usuário
+				const getUserCPF = async () => {
+					const token = localStorage.getItem("authToken");
+					if (token) {
+						try {
+							const response = await fetch('http://localhost:3000/getUserInfoByToken', {
+								method: 'GET',
+								headers: {
+									'token': token
+								}
+							});
+							const data = await response.json();
+							return data.cpf;
+						} catch (error) {
+							console.error('Erro ao obter CPF:', error);
+							return null;
+						}
+					}
+				};
+				// Função para buscar o histórico de apostas
+				const fetchBetHistory = async (cpf) => {
+					try {
+						const response = await fetch('http://localhost:3000/getBets', {
+							method: 'GET',
+							headers: {
+								'cpf': cpf.toString()
+							}
+						});
+						const data = await response.json();
+						renderBetHistory(data);
+					} catch (error) {
+						console.error("Erro ao carregar histórico de apostas:", error);
+						renderBetHistoryError();
+					}
+				};
+				// Renderiza o histórico de apostas na tabela
+				const renderBetHistory = (data) => {
+					const betHistorySection = document.getElementById("betHistorySection");
+					const betHistoryTableBody = betHistorySection.querySelector(".bet-history-table tbody");
+					// Limpar a tabela antes de renderizar
+					betHistoryTableBody.innerHTML = '';
+					if (data.success && data.data.length > 0) {
+						data.data.forEach((bet) => {
+							const row = document.createElement("tr");
+							row.innerHTML = `
+            
+												<td>${bet.name}</td>
+												<td>R$${bet.bet_value}</td>
+												<td>${bet.choice}</td>
+          `;
+							betHistoryTableBody.appendChild(row);
+						});
+					} else {
+						betHistoryTableBody.innerHTML = " < tr > < td colspan = '3' > Nenhuma aposta encontrada. < /td> < /tr>";
+					}
+				};
+				// Exibe uma mensagem de erro caso falhe a requisição
+				const renderBetHistoryError = () => {
+					const betHistorySection = document.getElementById("betHistorySection");
+					const betHistoryTableBody = betHistorySection.querySelector(".bet-history-table tbody");
+					betHistoryTableBody.innerHTML = " < tr > < td colspan = '3' > Erro ao carregar histórico de apostas.Tente novamente mais tarde. < /td> < /tr>";
+				};
+				// Buscar e renderizar histórico de apostas
+				getUserCPF().then((cpf) => {
+					if (cpf) {
+						fetchBetHistory(cpf);
+					} else {
+						console.error("CPF não encontrado.");
+					}
+				});
+			});
+		</script>
+		<!-- Eventos criados por você -->
+		<section id="eventsCreatedSection" style="display:none;">
+			<div class="container">
+				<div class="justify-between mb-15">
+					<div class="title mb-0"> 👇 Eventos criados por você </div>
+				</div>
+				<div class="cards-container" id="event_created_by_user"></div>
+			</div>
+		</section>
+		<!-- Rodapé -->
+		<footer style="min-height: 10vw;">
+			<div class="container">
+				<div class="text-center">
+					<div class="logo-footer mb-40">
+						<img src="../assets/images/logo/puclogo.png" style="width: 8rem;" alt="">
+					</div>
+					<div class="text-footer">
+						<h4> Este projeto de apostas oferece uma experiência simples e confiável para os usuários realizarem apostas em eventos que podem acontecer, ou não. <br> Com funcionalidades como cadastro rápido, gestão de saldo, histórico de apostas e cotas em tempo real, nossa plataforma é otimizada para desktop e dispositivos móveis. <br> Aposte de forma segura, acompanhe seus resultados e tenha controle total sobre suas transações financeiras. </h4>
+					</div>
+					<!-- Links para: Home, Carteira, Adicionar Fundos, Retirar Fundos, login, cadastro -->
+					<div class="links d-flex gap-20 justify-center">
+						<a href="#">Home</a>
+						<a href="#">Carteira</a>
+						<a href="#">Adicionar Fundos</a>
+						<a href="#">Retirar Fundos</a>
+						<a href="#">Login</a>
+						<a href="#">Cadastro</a>
+					</div>
+				</div>
+			</div>
+		</footer>
+		<!-- Modal: Event Details -->
+		<div class="modal" id="deleteEventDetails">
+			<div class="modal-content text-center">
+				<span class="close-btn" id="closeModalEventDetails">&times;</span>
+				<div class="logo mb-30">
+					<img src="../assets/images/logo/puclogo.png" alt="" srcset="">
+				</div>
+				<div class="event-name" style="margin: 26px 0;">
+					<div class="title"></div>
+				</div>
+				<!-- Descrição do evento -->
+				<div class="event-description one">
+					<p></p>
+				</div>
+				<!-- Descrição do evento 2 -->
+				<div class="event-description two">
+					<p></p>
+				</div>
+				<!-- Escolha se o evento vai acontecer ou não -->
+				<div class="event-status">
+					<p></p>
+				</div>
+				<form action="" method="PUT" id="deleteEvent">
+					<div class="pd-top-30">
+						<p>Deseja excluir esse evento?</p>
+					</div>
+					<div class="input">
+						<button type="submit" class="btn logout" id="betOnEventButton">Excluir evento</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<script>
+			document.addEventListener("DOMContentLoaded", () => {
+				const deleteEventDetailsModal = document.getElementById("deleteEventDetails");
+				const closeModalEventDetails = document.getElementById("closeModalEventDetails");
+				const deleteEventForm = document.getElementById("deleteEvent");
+				document.addEventListener("click", (event) => {
+					if (event.target.closest(".event-details-link")) {
+						event.preventDefault();
+						const eventCard = event.target.closest(".card");
+						if (eventCard) {
+							const eventId = eventCard.querySelector(".event-details-link").getAttribute("data-event-id");
+							// Preenche as informações no modal de exclusão
+							const eventName = eventCard.querySelector(".cat-name").innerText;
+							const eventDescription = eventCard.querySelector(".event-question").innerText;
+							const eventDescription2 = eventCard.querySelector(".event-question.two").innerText;
+							// Atualiza as informações do modal de exclusão
+							document.querySelector("#deleteEventDetails .event-name .title").innerText = eventName;
+							document.querySelector("#deleteEventDetails .event-description.one p").innerText = eventDescription;
+							document.querySelector("#deleteEventDetails .event-description.two p").innerText = eventDescription2;
+							// Atribui o ID do evento ao formulário de exclusão
+							deleteEventForm.setAttribute("data-event-id", eventId);
+							// Exibe o modal
+							deleteEventDetailsModal.style.display = "flex";
+						}
+					}
+				});
+				// Fecha o modal de exclusão ao clicar no botão de fechar
+				closeModalEventDetails.addEventListener("click", () => {
+					deleteEventDetailsModal.style.display = "none";
+				});
+				// Fecha o modal de exclusão ao clicar fora do conteúdo
+				window.addEventListener("click", (event) => {
+					if (event.target === deleteEventDetailsModal) {
+						deleteEventDetailsModal.style.display = "none";
+					}
+				});
+				// Envia o formulário de exclusão do evento
+				deleteEventForm.addEventListener("submit", async (event) => {
+					event.preventDefault();
+					const eventId = deleteEventForm.getAttribute("data-event-id");
+					if (!eventId) {
+						alert("ID do evento não encontrado.");
+						return;
+					}
+					try {
+						const response = await fetch('http://localhost:3000/deleteEvent', {
+							method: 'PUT',
+							headers: {
+								"Content-Type": "application/json",
+								"id": eventId
+							}
+						});
+						const result = await response.json();
+						if (response.ok) {
+							alert(result.message);
+							deleteEventDetailsModal.style.display = "none"; // Fecha o modal
+							location.reload(); // Atualiza a página para refletir a exclusão
+						} else {
+							alert(result.message || "Erro ao excluir o evento.");
+						}
+					} catch (error) {
+						console.error("Erro ao excluir o evento:", error);
+						alert("Erro ao excluir o evento. Tente novamente.");
+					}
+				});
+			});
+		</script>
+	</body>
+	<!-- JavaScript -->
+	<script src="../assets/js/main.js"></script>
+</html>

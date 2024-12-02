@@ -138,7 +138,6 @@ export namespace AccountsManager {
             await connection.commit();
             return { success: true, message: 'Conta e carteira criados com sucesso.' };
         } catch (error) {
-            console.log( error );
             return { success: false, message: 'Erro ao criar conta. Tente novamente mais tarde.' }
         } finally {
             await connection.close();
@@ -193,9 +192,6 @@ export namespace AccountsManager {
             }
             const result = await signUp(newAccount);
 
-            // Enviar o token e a role na resposta
-            console.log(newAccount);
-
             if (result.success) {
                 // Cria carteira no Oracle Cloud
                 const walletResult = await createWallet(newAccount);
@@ -223,7 +219,6 @@ export namespace AccountsManager {
             await connection.commit();
             return { success: true, message: 'Logout realizado com sucesso.' };
         } catch (error) {
-            console.log(error);
             return { success: false, message: 'Erro ao realizar logout.' };
         } finally {
             await connection.close();
@@ -247,41 +242,48 @@ export namespace AccountsManager {
         }
     };
 
-    export async function GetCpfByToken(token: string) {
+    /* GetUserInfoByToken */
+    async function GetUserInfoByToken(token: string) {
         const connection = await DataBaseHandler.GetConnection();
     
         try {
             const result = await connection.execute(
-                'SELECT CPF FROM ACCOUNTS WHERE TOKEN = :token',
+                'SELECT CPF, COMPLETE_NAME, EMAIL, PHONE_NUMBER, BIRTHDATE, CREATED_AT FROM ACCOUNTS WHERE TOKEN = :token',
                 [token]
             );
     
             const rows: any[][] = result.rows as any[][];
     
             if (rows && rows.length > 0) {
-                const cpf = rows[0][0]; // O CPF do usuário associado ao token
-                return { success: true, message: 'Conta encontrada com sucesso', cpf };
+                // Retorna as informações completas do usuário
+                const user = {
+                    cpf: rows[0][0],
+                    completeName: rows[0][1],
+                    email: rows[0][2],
+                    phoneNumber: rows[0][3],
+                    birthdate: rows[0][4],
+                    createdAt: rows[0][5]
+                };
+                return { success: true, message: 'Conta encontrada com sucesso', user };
             } else {
                 return { success: false, message: 'Conta inválida' };
             }
         } catch (error) {
-            console.log(error);
             return { success: false, message: 'Erro ao verificar conta' };
         } finally {
             await connection.close();
         }
     }
-
-    /* O Token vai vir do Front End que sera pego pelo Cookie Header */
-    export const GetCpfByTokenHandler: RequestHandler = async (req: Request, res: Response) => {
-        // Token chega como parâmetro da chamada
+    
+    /* O Token vai vir do Front End que será pego pelo Cookie Header */
+    export const GetUserInfoByTokenHandler: RequestHandler = async (req: Request, res: Response) => {
         const pToken = req.get('token');
     
         if (pToken) {
-            const result = await GetCpfByToken(pToken); // Chamando a função para obter o CPF
+            const result = await GetUserInfoByToken(pToken); // Chamando a função para obter as informações do usuário
     
             if (result.success) {
-                res.status(200).json({ cpf: result.cpf });
+                res.status(200).json(result.user); // Retorna as informações do usuário
             } else {
                 res.status(400).json({ message: result.message });
             }

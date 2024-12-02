@@ -92,60 +92,73 @@ export namespace EventsManager {
     }
 
     /* getFilteredEvents Funcionando */
-    async function getFilteredEvents(filter: string) {
+    async function getFilteredEvents(filter: string, pCPF?: number) {
         const connection = await DataBaseHandler.GetConnection();
-
+    
         try {
-            let query = 'SELECT ID, NAME, DESCRICAO, CATEGORY, QUOTA, START_DATE, END_DATE, APPROVED, STATUS_EVENT, CPF FROM EVENTS';
-            let conditions: string[] = [];
+            let query = '';  // A variável 'query' será construída dentro do switch
             let parameters: Record<string, any> = {};
-
+        
             switch (filter) {
-                case 'finalizando': // Categorizar eventos em andamento, próximos de vencer
-                    conditions.push(`end_date BETWEEN CURRENT_DATE AND CURRENT_DATE + 2 AND APPROVED = 1`);
-                    break;
-
-                case 'mais_apostas': // Eventos com mais apostas
+                case 'finalizando':
                     query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
-                                FROM EVENTS E
-                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                                WHERE E.APPROVED = 1
-                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                                HAVING COUNT(B.ID) > 0
-                                ORDER BY BET_COUNT DESC`;            
+                              FROM EVENTS E
+                              LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                              WHERE E.END_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE + 2 AND E.APPROVED = 1 AND E.STATUS_EVENT = 1
+                              GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                              ORDER BY E.START_DATE ASC`;
                     break;
-
-                case 'agrupados_por_categoria': // Eventos completos agrupados por categoria
+        
+                case 'mais_apostas':
                     query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
-                                FROM EVENTS E
-                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                                WHERE E.APPROVED = 1
-                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                                ORDER BY E.CATEGORY ASC, E.NAME ASC`;
+                              FROM EVENTS E
+                              LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                              WHERE E.APPROVED = 1 AND E.STATUS_EVENT = 1
+                              GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                              HAVING COUNT(B.ID) > 0
+                              ORDER BY BET_COUNT DESC`;
                     break;
-                
-                case 'all_events': // Todos os eventos aprovados
+        
+                case 'agrupados_por_categoria':
                     query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
-                                FROM EVENTS E
-                                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
-                                GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
-                                ORDER BY E.APPROVED DESC`;       
+                              FROM EVENTS E
+                              LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                              WHERE E.APPROVED = 1 AND E.STATUS_EVENT = 1
+                              GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                              ORDER BY E.CATEGORY ASC, E.NAME ASC`;
                     break;
-
+        
+                case 'all_events':
+                    query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
+                              FROM EVENTS E
+                              LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                              WHERE E.STATUS_EVENT = 1
+                              GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                              ORDER BY E.APPROVED DESC`;
+                    break;
+        
+                case 'event_created_by_user':
+                    if (pCPF) {
+                        query = `SELECT E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF, COUNT(B.ID) AS BET_COUNT
+                                  FROM EVENTS E
+                                  LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                                  WHERE E.CPF = :pCPF AND E.STATUS_EVENT = 1
+                                  GROUP BY E.ID, E.NAME, E.DESCRICAO, E.CATEGORY, E.QUOTA, E.START_DATE, E.END_DATE, E.APPROVED, E.STATUS_EVENT, E.CPF
+                                  ORDER BY E.APPROVED DESC`;
+                        parameters = { pCPF };
+                    }
+                    break;
+        
                 default:
                     throw new Error('Filtro inválido.');
             }
-
-            if (conditions.length > 0) {
-                query += ' WHERE ' + conditions.join(' AND ');
-            }
-
+        
             const result = await connection.execute<EventRow[]>(query, parameters);
-
+        
             const events = result.rows?.map(row => ({
                 id: row[0],
                 name: row[1],
-                description: row[2], // Adicionado aqui
+                description: row[2],
                 category: row[3],
                 quota: row[4],
                 start_date: row[5],
@@ -153,24 +166,34 @@ export namespace EventsManager {
                 approved: row[7],
                 status_event: row[8],
                 creator_CPF: row[9],
-                bet_count: filter === 'mais_apostas' || filter === 'all_events' || filter === 'agrupados_por_categoria' ? row[10] : null // Contagem de apostas
+                bet_count: filter === 'event_created_by_user' || filter === 'mais_apostas' || filter === 'all_events' || filter === 'agrupados_por_categoria' || filter === 'finalizando' ? row[10] : null
             })) || [];
-
+        
             return { success: true, events };
         } catch (error) {
-            console.error(error);
+            console.error("Erro na consulta:", error);
             return { success: false, message: 'Erro ao buscar eventos.' };
         } finally {
             await connection.close();
         }
+        
     }
     
     /* getEventsHandler Funcionando */
     export const getEventsHandler: RequestHandler = async (req: Request, res: Response) => {
         const filter = req.get('filter');  // Parâmetro "filter" do header
+        const cpf = req.get('cpf');
+        
+        let pCPF: number | undefined;
+        if (typeof cpf === 'string') {
+            pCPF = parseInt(cpf, 10);
+        } else {
+            pCPF = undefined;
+        }
+
         try {
             if (filter) {
-                const result = await getFilteredEvents(filter);
+                const result = await getFilteredEvents(filter, pCPF);
                 if (result.success) {
                     res.status(200).json(result.events);
                 } else {
@@ -184,11 +207,48 @@ export namespace EventsManager {
         }
     };
 
-    /* updateEventStatus funcionando */
+    // Função para verificar se há apostas associadas ao evento
+    async function hasBets(eventId: number): Promise<boolean> {
+        const connection = await DataBaseHandler.GetConnection();
+
+        try {
+            const result = await connection.execute(
+                'SELECT COUNT(*) AS COUNT FROM BETS WHERE ID_EVENTS = :eventId',
+                { eventId }
+            );
+
+            const rows: any[][] = result.rows as any[][];
+
+            if (rows[0][0] > 0) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (error) {
+            console.error(error);
+            throw new Error('Erro ao verificar apostas do evento.');
+        } finally {
+            await connection.close();
+        }
+    }
+
+    // Função para atualizar o status do evento
     async function updateEventStatus(eventId: number, newStatus: number) {
         const connection = await DataBaseHandler.GetConnection();
 
         try {
+
+            // Verificando se o evento existe
+            const eventResult = await connection.execute(
+                'SELECT ID FROM EVENTS WHERE ID = :eventId',
+                [eventId]
+            );
+
+            if (!eventResult.rows || eventResult.rows.length === 0) {
+                return { success: false, message: 'Evento não encontrado.' };
+            }
+
             const result = await connection.execute(
                 'UPDATE EVENTS SET STATUS_EVENT = :newStatus WHERE ID = :eventId',
                 { newStatus, eventId }
@@ -196,9 +256,8 @@ export namespace EventsManager {
 
             await connection.commit();
 
-            // Verifica se alguma linha foi afetada
             if (result.rowsAffected && result.rowsAffected > 0) {
-                return { success: true, message: 'Status do evento atualizado com sucesso.' };
+                return { success: true, message: 'Evento excluido com sucesso.' };
             } else {
                 return { success: false, message: 'Evento não encontrado.' };
             }
@@ -210,40 +269,68 @@ export namespace EventsManager {
         }
     }
 
-    /* updateEventStatusHandler funcionando */
+    // Handler para a rota
     export const updateEventStatusHandler: RequestHandler = async (req: Request, res: Response) => {
-        const pID = parseInt(req.get('id') || '', 10);
+        const eventId = parseInt(req.get('id') || '', 10);
 
-        if (pID) {
-            const result = await updateEventStatus(pID, 0);
+        if (!eventId) {
+            res.status(400).json({ success: false, message: 'ID do evento é obrigatório!' });
+            return;
+        }
+
+        try {
+            // Verifica se o evento tem apostas
+            const hasActiveBets = await hasBets(eventId);
+
+            if (hasActiveBets) {
+                res.status(400).json({ success: false, message: 'Não é possível excluir um evento com apostas associadas.' });
+                return;
+            }
+
+            // Atualiza o status do evento
+            const result = await updateEventStatus(eventId, 0);
 
             if (result.success) {
-                res.status(200).send(result.message);
+                res.status(200).json(result);
             } else {
-                res.status(404).send(result.message);
+                res.status(404).json(result);
             }
-        } else {
-            res.status(400).send('ID do evento e novo status são obrigatórios e devem ser números.');
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: 'Erro interno ao processar a requisição.' });
         }
     };
 
-    /* sendRejectionEmail Funcionando */
-    async function sendRejectionEmail(to: string) {
+
+
+    async function sendRejectionEmail(to: string, reason: string) {
         const transporter = nodemailer.createTransport({
-            host: 'mail.woodlaw.com.br', // Substitua pelo seu domínio
-            port: 465, // Use 465 para SSL ou 587 para TLS
-            secure: true, // Defina como true para 465, e false para 587
+            host: 'mail.woodlaw.com.br',
+            port: 465,
+            secure: true,
             auth: {
-                user: process.env.EMAIL_USER, // Seu e-mail completo na HostGator
-                pass: process.env.EMAIL_PASSWORD // Sua senha de e-mail
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD
             }
         });
     
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"PUC BET - Eventos" <${process.env.EMAIL_USER}>`,
             to: to,
-            subject: 'Evento Reprovado',
-            text: `Infelizmente, o seu evento foi reprovado. Entre em contato para mais informações.`
+            subject: 'Notificação: Evento Reprovado',
+            html: `
+            
+            <div style=" font-family: Arial, sans-serif; line-height: 1.6; color: #ffffff; padding: 46px 28px 53px; border-radius: 1rem; background: linear-gradient(223.7deg, #3b454e -0.11%, #131b24 50.01%); text-align: center;">
+                <h2 style="color: #fff; text-align: center;">Seu evento foi reprovado</h2>
+                <p>Prezado(a),</p>
+                <p>Infelizmente, o seu evento não foi aprovado. Lamentamos por qualquer inconveniente.</p>
+                <p><strong>Motivo:</strong> ${reason}</p>
+                <p>Para mais informações ou esclarecimentos, entre em contato com a nossa equipe.</p>
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="mailto:${process.env.EMAIL_USER}" style=" display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; color: white; text-decoration: none; border-radius: 100px; background: linear-gradient(90deg, rgba(54, 28, 145, 1) 40%, rgba(93, 50, 217, 1) 60%, rgba(145, 112, 240, 1) 100%); border: 1px solid rgb(54, 28, 145); "> Entrar em contato </a>
+                </div>
+                <p style="margin-top: 20px;">Atenciosamente,<br><strong>Equipe PUC BET Eventos</strong></p>
+            </div>`
         };
     
         try {
@@ -254,81 +341,132 @@ export namespace EventsManager {
         }
     }
     
-    /* evaluateNewEvent Funcionando */
-    async function evaluateNewEvent(eventId: number, approved: string) {
+
+    // Função para verificar a role do usuário
+    async function checkUserRole(cpf: number): Promise<boolean> {
         const connection = await DataBaseHandler.GetConnection();
 
-        const aApprove = Number(approved);
-    
         try {
-        
+            const result = await connection.execute(
+                'SELECT ROLE FROM ACCOUNTS WHERE CPF = :cpf',
+                [cpf]
+            );
+
+            const resultRows: any[][] = result.rows as any[][];
+            
+            // Verifica se encontrou o CPF e se a role é igual a 1
+            if (result.rows && result.rows.length > 0) {
+                const role = resultRows[0][0];
+                return role === 1;
+            }
+
+            return false;
+        } catch (error) {
+            console.error(error);
+            return false;
+        } finally {
+            await connection.close();
+        }
+    }
+
+    /* Função para avaliar um evento */
+    async function evaluateNewEvent(eventId: number, approved: string, reason: string) {
+        const connection = await DataBaseHandler.GetConnection();
+        const aApprove = Number(approved);
+
+        try {
+            
+            // Verificando se o evento existe
+            const eventResult = await connection.execute(
+                'SELECT ID FROM EVENTS WHERE ID = :eventId',
+                [eventId]
+            );
+
+            if (!eventResult.rows || eventResult.rows.length === 0) {
+                return { success: false, message: 'Evento não encontrado.' };
+            }
+
             await connection.execute(
                 'UPDATE EVENTS SET APPROVED = :aApprove WHERE ID = :eventId',
                 [aApprove, eventId]
             );
             
             await connection.commit();
-    
+
             if (aApprove === 0) {
                 const eventResult = await connection.execute(
                     'SELECT CPF FROM EVENTS WHERE ID = :eventId',
                     [eventId]
                 );
-                
+
                 const rows: number[][] = eventResult.rows as number[][];
-                
-                // Verifica se rows não é undefined e possui pelo menos uma linha
+
                 if (eventResult.rows && eventResult.rows.length > 0) {
-                    const creator_CPF = (eventResult.rows as number[][])[0][0];
-                
-                    const EmailResult = await connection.execute(
+                    const creator_CPF = rows[0][0];
+                    const emailResult = await connection.execute(
                         'SELECT EMAIL FROM ACCOUNTS WHERE CPF = :creator_CPF',
                         [creator_CPF]
                     );
 
-                    // Verifica se `result.rows` não é undefined e possui pelo menos uma linha
-                    if (EmailResult.rows && EmailResult.rows.length > 0) {
-                        const creatorEmail = EmailResult.rows[0] as string;
-                        await sendRejectionEmail(creatorEmail);
+                    const emailResultRows: string[][] = emailResult.rows as string[][];
+
+                    if (emailResult.rows && emailResult.rows.length > 0) {
+                        const creatorEmail = emailResultRows[0][0];
+                        await sendRejectionEmail(creatorEmail, reason);
                     } else {
-                        return {sucess: false, message: 'Nenhum e-mail encontrado para o criador do evento.'};
+                        return { success: false, message: 'Nenhum e-mail encontrado para o criador do evento.' };
                     }
                 } else {
-                    return {sucess: false, message: 'Nenhum criador encontrado para o evento.'};
+                    return { success: false, message: 'Nenhum criador encontrado para o evento.' };
                 }
                 return { success: false, message: 'Evento reprovado e e-mail enviado para o criador.' };
             }
-    
-            return { success: true, message: 'Evento aprovado'};
-    
+
+            return { success: true, message: 'Evento aprovado' };
+
         } catch (error) {
             console.error("Erro ao avaliar o evento:", error);
             return { success: false, message: 'Erro ao processar o evento. Tente novamente mais tarde.' };
-    
+
         } finally {
             await connection.close();
         }
     }
-    
-    /* evaluateEventHandler Funcionando */
-    export const evaluateEventHandler = async (req: Request, res: Response) => {
+
+    /* Handler atualizado */
+    export const evaluateEventHandler: RequestHandler = async (req: Request, res: Response) => {
+        const cpf = Number(req.get('cpf')); // CPF enviado no cabeçalho da requisição
         const eID = Number(req.get('eventID'));
         const pApproved = req.get('approved');
+        const pReason = req.get('reason');
 
         if (pApproved !== '0' && pApproved !== '1') {
-            res.status(400).send("Parâmetros inválidos. Digite 1 ou 0 para aprovar ou rejeitar o evento.");
+            res.status(400).json({ success: false, message: "Parâmetros inválidos. Digite 1 ou 0 para aprovar ou rejeitar o evento." });
         }
 
-        if (eID && pApproved) {
-            const evaluationResult = await evaluateNewEvent(eID, pApproved);
-
-            if (evaluationResult.success) {
-                res.status(200).send(evaluationResult.message);
-            } else {
-                res.status(500).send(evaluationResult.message);
-            }
-        } else {
-            res.status(400).send("Parâmetros inválidos ou faltantes.");
+        if (!eID || !pApproved) {
+            res.status(400).json({ success: false, message: "Parâmetros inválidos ou faltantes." });
         }
+
+        const hasPermission = await checkUserRole(cpf);
+
+        if (!hasPermission) {
+            res.status(403).json({ success: false, message: "Acesso negado. Usuário não possui permissão para realizar esta ação." });
+        }
+        
+        let evaluationResult;
+
+        if (pApproved === undefined || pReason === undefined) {
+            res.status(400).json({ success: false, message: "Parâmetros inválidos. O motivo e a aprovação são obrigatórios." });
+          } else {
+            evaluationResult = await evaluateNewEvent(eID, pApproved, pReason);
+          }
+
+          if (evaluationResult && evaluationResult.success) {
+            res.status(200).json(evaluationResult);
+          } else {
+            res.status(500).json(evaluationResult);
+          }
     };
+
 }

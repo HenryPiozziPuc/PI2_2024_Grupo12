@@ -265,20 +265,25 @@ export namespace BetsManager {
     
 
 
-   /* Função para obter apostas */
+    /* Função para obter apostas */
     async function GetBets(cpf: number) {
         const connection = await DataBaseHandler.GetConnection();
 
         try {
             const betsResult = await connection.execute(
-                'SELECT E.NAME AS EVENT_NAME, B.BET_VALUE, B.CHOICE ' +
-                'FROM BETS B ' +
-                'JOIN EVENTS E ON B.ID_EVENTS = E.ID ' +
-                'WHERE B.CPF = :cpf',
-                { cpf } // Aqui passamos um objeto com a chave "cpf"
+                `SELECT E.NAME, B.BET_VALUE, 
+                    CASE 
+                        WHEN B.CHOICE = 0 THEN 'Não vai acontecer!'
+                        WHEN B.CHOICE = 1 THEN 'Vai acontecer!'
+                    END AS BET_CHOICE
+                FROM EVENTS E
+                LEFT JOIN BETS B ON E.ID = B.ID_EVENTS
+                WHERE B.CPF = :cpf
+                ORDER BY B.BET_AT DESC`,
+                [cpf]  // Passando o objeto com a chave "cpf"
             );
             
-
+            
             const result = betsResult.rows as any[][];
 
             if (result.length === 0) {
@@ -330,7 +335,4 @@ export namespace BetsManager {
             });
         }
     };
-
-
-
 }
